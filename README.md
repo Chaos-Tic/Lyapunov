@@ -103,7 +103,12 @@ cmake --build build
 cmake --install build --prefix "$HOME/.local"
 ```
 
-`install.sh` also installs missing build tools and offers the GNOME extension.
+Cargo builds the Rust command; CMake builds the Qt interface and installs both,
+with the menu entry, icons and license, through one standard install rule. For
+distribution packages, `DESTDIR="$pkgdir" cmake --install build --prefix /usr`
+places those files in a temporary package directory without changing the live
+system. `install.sh` uses the same rule and also offers missing build tools and
+the GNOME extension.
 
 Release packages are built and checked by the tagged CI run:
 
