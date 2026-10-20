@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- New icon in the Liquid Glass family of Lorenz: an open card between two bands,
+  with its Resume button. Card emblems and the README banner follow it.
+
 ## 0.1.0 — 2026-10-20
 
 First version.

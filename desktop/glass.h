@@ -166,53 +166,67 @@ inline void surface(QPainter &p, const QRectF &r, qreal radius, const Theme &th,
     p.restore();
 }
 
-// The card emblem: a disc in the card's colour with the trajectory that
-// settles on a point, Lyapunov's sign of a state you return to.
+// The card emblem: a disc in the card's colour holding a small open card,
+// the same sign as the application logo.
 inline void emblem(QPainter &p, QPointF c, qreal radius, const Tint &t, const Theme &th) {
     p.save();
     QLinearGradient g(c - QPointF(radius, radius), c + QPointF(radius, radius));
     g.setColorAt(0, t.lite); g.setColorAt(1, t.base);
     p.setPen(QPen(alpha(Qt::white, th.dark ? .35 : .8), 1)); p.setBrush(g);
     p.drawEllipse(c, radius, radius);
-    QPainterPath spiral;
-    const int steps = 60; const qreal turns = 1.8, k = .22;
-    for (int i = 0; i <= steps; ++i) {
-        const qreal t2 = i / qreal(steps) * turns * 2 * M_PI;
-        const qreal rr = radius * .62 * std::exp(-k * t2);
-        const QPointF pt = c + QPointF(rr * std::cos(3.5 - t2), rr * std::sin(3.5 - t2));
-        if (i == 0) spiral.moveTo(pt); else spiral.lineTo(pt);
-    }
-    p.setBrush(Qt::NoBrush); p.setPen(QPen(Qt::white, qMax(1.4, radius * .16), Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
-    p.drawPath(spiral);
-    p.setPen(Qt::NoPen); p.setBrush(Qt::white); p.drawEllipse(c, radius * .14, radius * .14);
+    const qreal w = radius * 1.12, h = radius * .78;
+    const QRectF card(c.x() - w / 2, c.y() - h / 2, w, h);
+    p.setPen(Qt::NoPen); p.setBrush(alpha(Qt::white, .45));
+    p.drawRoundedRect(card.translated(0, -radius * .3).adjusted(w * .14, 0, -w * .14, -h * .5), radius * .14, radius * .14);
+    p.setBrush(Qt::white);
+    p.drawRoundedRect(card.translated(0, radius * .08), radius * .2, radius * .2);
+    p.setBrush(t.base);
+    p.drawRoundedRect(QRectF(card.left() + w * .16, card.center().y() + h * .2, w * .5, h * .2), h * .1, h * .1);
     p.restore();
 }
 
-// The application logo (assets/lyapunov.svg), drawn in a square: two stacked
-// cards, the front one carrying a trajectory that settles on a point.
+// The application logo (assets/lyapunov.svg), drawn in a square: an open
+// glass card between two bands, as in the stack, with its Resume button,
+// on the soft peach, blue and lilac tile shared with Lorenz.
 inline void logo(QPainter &p, const QRectF &box) {
     p.save(); p.setRenderHint(QPainter::Antialiasing);
     p.translate(box.topLeft()); p.scale(box.width() / 256.0, box.height() / 256.0);
-    p.save(); p.translate(136, 90); p.rotate(-9); p.translate(-136, -90);
-    QLinearGradient back(58, 34, 214, 146); back.setColorAt(0, QColor("#9fdcf8")); back.setColorAt(1, QColor("#6aa8f0"));
-    p.setPen(Qt::NoPen); p.setBrush(back); p.drawRoundedRect(QRectF(58, 34, 156, 112), 30, 30);
+    const QRectF tileRect(8, 8, 240, 240);
+    QPainterPath tile; tile.addRoundedRect(tileRect, 58, 58);
+    p.save(); p.setClipPath(tile);
+    p.fillRect(tileRect, QColor("#f1eefb"));
+    auto blob = [&](QPointF c, qreal r, const char *color) {
+        QRadialGradient g(c, r * 1.6);
+        g.setColorAt(0, QColor(color)); g.setColorAt(1, alpha(QColor(color), 0));
+        p.fillRect(tileRect, g);
+    };
+    blob({40, 40}, 90, "#ffb48f"); blob({235, 110}, 95, "#8fcaff"); blob({120, 250}, 95, "#d6b0ff");
     p.restore();
-    QLinearGradient front(34, 72, 230, 218);
-    front.setColorAt(0, QColor("#ffc39a")); front.setColorAt(.55, QColor("#f29bb8")); front.setColorAt(1, QColor("#a98cf0"));
-    p.setBrush(front); p.drawRoundedRect(QRectF(34, 72, 196, 146), 36, 36);
-    QLinearGradient sheen(0, 72, 0, 218); sheen.setColorAt(0, rgba(255, 255, 255, .55)); sheen.setColorAt(.45, rgba(255, 255, 255, 0));
-    p.setBrush(sheen); p.drawRoundedRect(QRectF(34, 72, 196, 146), 36, 36);
-    p.setBrush(Qt::NoBrush); p.setPen(QPen(rgba(255, 255, 255, .75), 3));
-    p.drawRoundedRect(QRectF(35.5, 73.5, 193, 143), 34.5, 34.5);
-    QPainterPath spiral;
-    const qreal start = 200 * M_PI / 180, turns = 2.15, k = .2;
-    for (int i = 0; i <= 220; ++i) {
-        const qreal t = i / 220.0 * turns * 2 * M_PI, r = 52 * std::exp(-k * t), a = start - t;
-        const QPointF pt(132 + r * std::cos(a), 140 + r * std::sin(a));
-        if (i == 0) spiral.moveTo(pt); else spiral.lineTo(pt);
-    }
-    p.setPen(QPen(Qt::white, 11, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin)); p.drawPath(spiral);
-    p.setPen(Qt::NoPen); p.setBrush(Qt::white); p.drawEllipse(QPointF(132, 140), 9, 9);
+    p.setBrush(Qt::NoBrush); p.setPen(QPen(rgba(255, 255, 255, .9), 2));
+    p.drawRoundedRect(QRectF(9, 9, 238, 238), 57, 57);
+    auto glassCard = [&](const QRectF &r, const char *tint, qreal amount) {
+        shadow(p, r, 20, rgba(42, 30, 92, .22), 1.0, 8);
+        p.setPen(Qt::NoPen); p.setBrush(alpha(QColor(tint), amount)); p.drawRoundedRect(r, 20, 20);
+        p.setBrush(rgba(255, 255, 255, .18)); p.drawRoundedRect(r, 20, 20);
+        QLinearGradient sheen(r.topLeft(), r.bottomLeft());
+        sheen.setColorAt(0, rgba(255, 255, 255, .75)); sheen.setColorAt(.55, rgba(255, 255, 255, 0));
+        p.setBrush(sheen); p.drawRoundedRect(r, 20, 20);
+        p.setBrush(Qt::NoBrush); p.setPen(QPen(rgba(255, 255, 255, .95), 2));
+        p.drawRoundedRect(r.adjusted(1, 1, -1, -1), 19, 19);
+    };
+    glassCard(QRectF(56, 40, 144, 58), "#ffad85", .78);
+    glassCard(QRectF(56, 170, 144, 58), "#ad8cf0", .78);
+    const QRectF front(34, 70, 188, 118);
+    glassCard(front, "#5fbcf2", .82);
+    QLinearGradient film(front.topLeft(), front.bottomRight());
+    film.setColorAt(0, QColor("#78e0ff")); film.setColorAt(.3, QColor("#aa96ff")); film.setColorAt(.55, QColor("#ff96d6"));
+    film.setColorAt(.8, QColor("#ffd68c")); film.setColorAt(1, QColor("#78e0ff"));
+    p.setPen(QPen(QBrush(film), 2.5)); p.drawRoundedRect(front.adjusted(-1, -1, 1, 1), 21, 21);
+    p.setPen(Qt::NoPen); p.setBrush(Qt::white); p.drawEllipse(QPointF(62, 98), 11, 11);
+    p.setBrush(rgba(255, 255, 255, .95)); p.drawRoundedRect(QRectF(82, 92, 80, 11), 5.5, 5.5);
+    p.setBrush(QColor("#151820")); p.drawRoundedRect(QRectF(54, 148, 104, 26), 13, 13);
+    QPainterPath play; play.moveTo(99, 154); play.lineTo(109, 161); play.lineTo(99, 168); play.closeSubpath();
+    p.setBrush(Qt::white); p.drawPath(play);
     p.restore();
 }
 
