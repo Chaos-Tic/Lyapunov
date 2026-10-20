@@ -2,9 +2,9 @@
 //! happened.
 //!
 //! The plan lists one step per application and per folder or document. The
-//! user can leave any step out. Applications already open are reused, never
-//! started a second time; an application is started only when none of its
-//! windows is open. Windows are then moved to their saved places, on a
+//! user can leave any step out. Applications already open are recognised by
+//! app identity only; their project or document is not known. Windows are
+//! moved only when the user has opted in, on a
 //! screen that exists. The report distinguishes a window that was found, an
 //! application that was started, and an item that is unavailable. A failure
 //! never stops the other steps.
@@ -179,7 +179,10 @@ pub fn plan(card: &Card, snap: &Snapshot, index: &AppIndex, backend: &dyn Backen
     for (i, app) in card.apps.iter().enumerate() {
         let open = snap.windows.iter().filter(|w| belongs(app, w, index)).count();
         let (kind, reason) = if open > 0 {
-            (StepKind::Running, None)
+            (
+                StepKind::Running,
+                Some("application identity only; project or document not verified".into()),
+            )
         } else {
             match installed(app, index) {
                 Ok(()) => (StepKind::Launch, None),
@@ -383,6 +386,8 @@ pub fn execute(
                 o.notes.extend(step.reason.clone());
             }
             StepKind::Running => {
+                o.notes
+                    .push("project or document in the open window was not verified".into());
                 o.status = if opts.arrange_open_windows && caps.geometry && !app.windows.is_empty() {
                     Status::WindowFound
                 } else {
@@ -821,6 +826,10 @@ mod tests {
         let kinds: Vec<_> = p.steps.iter().map(|s| s.kind).collect();
         assert_eq!(kinds, [StepKind::Running, StepKind::Unavailable, StepKind::Unavailable]);
         assert_eq!(p.steps[0].open, 2);
+        assert_eq!(
+            p.steps[0].reason.as_deref(),
+            Some("application identity only; project or document not verified")
+        );
         assert_eq!(p.steps[1].reason.as_deref(), Some("not installed"));
         assert_eq!(p.steps[2].reason.as_deref(), Some("not found"));
     }
@@ -829,7 +838,9 @@ mod tests {
     fn resume_arranges_found_windows_and_reports_the_rest() {
         let mut f = fake();
         let c = card();
-        let r = execute(&c, &Options::for_card(&c), &mut f, &AppIndex::default(), |_| {}).unwrap();
+        let mut o = Options::for_card(&c);
+        o.arrange_open_windows = true;
+        let r = execute(&c, &o, &mut f, &AppIndex::default(), |_| {}).unwrap();
         assert_eq!(f.placed.len(), 2);
         assert_eq!(f.placed[0].rect, Some(Rect::new(0, 0, 500, 400)));
         assert_eq!(f.placed[1].rect, Some(Rect::new(600, 0, 500, 400)));
@@ -847,11 +858,15 @@ mod tests {
         let mut f = fake();
         let c = card();
         let mut o = Options::for_card(&c);
-        o.arrange_open_windows = false;
+        assert!(
+            !o.arrange_open_windows,
+            "a new card must not move an unrelated project's window"
+        );
         o.skip = vec!["place:0".into()];
         let r = execute(&c, &o, &mut f, &AppIndex::default(), |_| {}).unwrap();
         assert!(f.placed.is_empty(), "open windows stay where they are");
         assert_eq!(r.outcomes[0].status, Status::LeftOpen);
+        assert!(r.outcomes[0].notes.iter().any(|n| n.contains("not verified")));
         assert_eq!(r.outcomes[2].status, Status::Skipped);
         let mut f = fake();
         let mut o = Options::for_card(&c);

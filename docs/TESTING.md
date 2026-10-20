@@ -9,7 +9,7 @@
 | `cargo test` | Card validation, storage (atomic writes, corrupt and newer cards, permissions, paths), desktop entries and `Exec` splitting, application recognition, refused places, geometry fitting, desktop matching, plan and resume with a fake backend, backend parsers and command builders | Linux, Windows, Rust 1.85 |
 | `ctest --test-dir build` | The card stack offscreen: layout, every band visible, hit testing, keyboard, Resume, More, Delete, accessible name | Linux, Windows |
 | `lyapunov-desktop --smoke-test` | The window starts with the installed Qt | every package |
-| `scripts/test-kwin-isolated.sh` | Capture and resume end to end in a private nested KWin (Wayland) with its own D-Bus | Linux with KWin; CI in an Arch container |
+| `scripts/test-kwin-isolated.sh` | Capture and resume end to end in a private nested KWin (Wayland) with its own D-Bus | Linux host with KWin; local pre-release gate |
 | `scripts/test-gnome-container.sh` | The same on a headless GNOME Shell with the extension; other callers and untrusted copies of `lyapunov` are refused | Fedora container |
 | `scripts/test-sessions-container.sh` | The same under Openbox, Xfwm4, i3 and headless sway | Arch container |
 | `scripts/test-packages-container.sh` | `.deb`, `.rpm` and Arch packages built in their distribution, installed, used and removed in clean containers | Docker or Podman |
@@ -21,6 +21,14 @@ through the card, closes the application and lets Lyapunov start it again,
 simulates an unplugged screen, a second desktop, maximising and restoring, and
 deletes the card without closing anything. Each step's JSON is kept as
 evidence.
+
+KWin's virtual compositor passes on an Arch Linux host but crashes before
+registering on D-Bus inside the current Arch container on both the local
+Docker engine and the GitHub runner. The KWin container job is therefore not
+part of CI; `scripts/test-kwin-container.sh` remains available for diagnosing
+that environment. Run `scripts/test-kwin-isolated.sh` on a Linux host with
+KWin before a release. This is a CI coverage gap, not evidence that KWin is
+broken on the desktop.
 
 ## By hand, before a release
 

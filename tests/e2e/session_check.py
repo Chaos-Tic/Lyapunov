@@ -114,6 +114,9 @@ target = {"x": area["x"] + 61, "y": area["y"] + 73, "width": 520, "height": 340}
 
 def set_slot(**fields):
     c = run("show", cid)
+    # This test explicitly checks arranging an existing window. New cards leave
+    # open windows in place by default because their project is unknown.
+    c["resume"]["arrange_open_windows"] = True
     for a in c["apps"]:
         if a.get("desktop") == APP_ID:
             a["windows"][0].update(fields)

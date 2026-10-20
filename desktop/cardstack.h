@@ -14,7 +14,7 @@ struct CardView {
     QStringList apps;
     int windows = 0;
     QVector<QPair<QString, bool>> places; // path, is a folder
-    bool ask = true, arrange = true;
+    bool ask = true, arrange = false;
     QJsonObject raw;
 
     static CardView from(const QJsonObject &o) {
@@ -28,7 +28,7 @@ struct CardView {
         for (const auto &p : o["places"].toArray())
             c.places.append({p.toObject()["path"].toString(), p.toObject()["kind"].toString() == "folder"});
         const QJsonObject r = o["resume"].toObject();
-        c.ask = r["ask"].toBool(true); c.arrange = r["arrange_open_windows"].toBool(true);
+        c.ask = r["ask"].toBool(true); c.arrange = r["arrange_open_windows"].toBool(false);
         return c;
     }
     QString summary() const {

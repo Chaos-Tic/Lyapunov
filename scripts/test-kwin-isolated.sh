@@ -16,12 +16,30 @@ chmod 700 "$run/runtime"
 export XDG_RUNTIME_DIR=$run/runtime XDG_CONFIG_HOME=$run/config XDG_DATA_HOME=$run/data
 export LYAPUNOV_DATA_DIR=$run/cards LYAPUNOV_BACKEND=kwin
 unset WAYLAND_DISPLAY DISPLAY
-kwin_wayland --virtual --width 1600 --height 900 --socket lyapunov-test \
+# A private copy avoids inheriting Arch's file capability when nested KWin
+# starts; the test still uses a separate D-Bus and virtual screen.
+cp "$(command -v kwin_wayland)" "$run/kwin_wayland"
+"$run/kwin_wayland" --virtual --width 1600 --height 900 --socket lyapunov-test \
     --no-lockscreen --no-global-shortcuts --no-kactivities >"$run/kwin.log" 2>&1 &
 kwin=$!
-trap 'kill $kwin 2>/dev/null; wait $kwin 2>/dev/null || true' EXIT
+cleanup() {
+    result=$?
+    if (( result != 0 )); then
+        echo "--- KWin startup log" >&2
+        tail -60 "$run/kwin.log" >&2
+    fi
+    kill "$kwin" 2>/dev/null || true
+    wait "$kwin" 2>/dev/null || true
+}
+trap cleanup EXIT
 qdbus=$(command -v qdbus6 || command -v qdbus)
-for _ in $(seq 100); do "$qdbus" org.kde.KWin /KWin >/dev/null 2>&1 && break; sleep 0.1; done
+ready=0
+for _ in $(seq 100); do
+    if "$qdbus" org.kde.KWin /KWin >/dev/null 2>&1; then ready=1; break; fi
+    if ! kill -0 "$kwin" 2>/dev/null; then break; fi
+    sleep 0.1
+done
+(( ready )) || { echo "KWin did not register on the isolated D-Bus session" >&2; exit 1; }
 export WAYLAND_DISPLAY=lyapunov-test
 # KWin registers its objects one after the other: wait for the desktops.
 for _ in $(seq 100); do

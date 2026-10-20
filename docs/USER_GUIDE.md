@@ -35,9 +35,9 @@ then **Resume this space** (or Enter, or a double-click on the open card).
 The preview lists every step:
 
 - **Will be started**: the application is not open.
-- **Open — windows arranged**: it is open; its windows will be moved to their
-  saved places (untick *Also move windows that are already open* to leave
-  them).
+- **Open — project not verified**: the application is open, but Lyapunov cannot
+  identify its project or document. It leaves existing windows in place by
+  default. You may opt in to moving them, after reviewing the preview.
 - **Will be opened**: a folder or document.
 - **Unavailable**: not installed, not found, or not something a card opens.
 
@@ -47,7 +47,15 @@ Untick any step, then **Resume**. Lyapunov reports each step:
 gets it out of the way.
 
 To skip the preview for a card, open **More → Edit…** and untick *Show what
-will happen before resuming*.
+will happen before resuming*. The preview still appears if moving already open
+windows is enabled.
+
+A card is a saved recipe, not a paused virtual desktop. Lyapunov never closes,
+freezes, or autosaves applications. For example, a VS Code window open on
+project A stays open on A when you resume a card for project B; Lyapunov does
+not yet know how to distinguish those projects or launch B beside A. Add the
+project folder to the card to open it explicitly, but check which application
+your desktop uses to open that folder.
 
 ## Keep cards up to date
 
@@ -61,8 +69,9 @@ will happen before resuming*.
 
 ## Several screens and desktops
 
-Windows return to the screen and virtual desktop they were on. If a screen is
-no longer connected, its windows move to the primary screen at the same
+Windows that Lyapunov arranges return to the screen and virtual desktop they
+were on. If a screen is no longer connected, those windows move to the primary
+screen at the same
 relative place and size. If a desktop no longer exists, windows stay on the
 current one, and the report says so. On sway, i3 and Hyprland, a missing
 workspace is created.

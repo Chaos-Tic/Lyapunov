@@ -70,7 +70,9 @@ inline QString L(const QString &english) {
         {"Move windows that are already open", "Déplacer les fenêtres déjà ouvertes"}, {"Save", "Enregistrer"},
         // Resume
         {"Resume “%1”", "Reprendre « %1 »"}, {"Resume", "Reprendre"}, {"Will be started", "Sera lancée"},
-        {"Open — windows arranged", "Ouverte — fenêtres replacées"}, {"Open", "Ouverte"}, {"Will be opened", "Sera ouvert"},
+        {"Open — project not verified", "Ouverte — projet non vérifié"}, {"Open", "Ouverte"}, {"Will be opened", "Sera ouvert"},
+        {"Lyapunov recognises the app, not its project or document. Open windows may belong to another space; nothing is closed.",
+         "Lyapunov reconnaît l'application, pas son projet ni son document. Les fenêtres ouvertes peuvent appartenir à un autre espace ; rien n'est fermé."},
         {"Unavailable", "Indisponible"}, {"not installed", "non installée"}, {"not found", "introuvable"},
         {"runs in a terminal", "s'exécute dans un terminal"},
         {"Lyapunov cannot start this application (no menu entry)", "Lyapunov ne peut pas lancer cette application (pas d'entrée de menu)"},
@@ -88,6 +90,7 @@ inline QString L(const QString &english) {
         {"started, but no window appeared in time to be arranged", "lancée, mais aucune fenêtre n'est apparue à temps pour être replacée"},
         {"windows are not arranged on this desktop", "les fenêtres ne sont pas replacées sur ce bureau"},
         {"a window could not be moved", "une fenêtre n'a pas pu être déplacée"},
+        {"project or document in the open window was not verified", "le projet ou document de la fenêtre ouverte n'a pas été vérifié"},
         {"window closed", "fenêtre fermée"}, {"this window cannot be moved", "cette fenêtre ne peut pas être déplacée"},
         // Delete and problems
         {"Delete “%1”?", "Supprimer « %1 » ?"},

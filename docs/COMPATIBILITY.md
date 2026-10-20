@@ -38,6 +38,10 @@ Built in CI on every change; see the latest run of the
 
 ## Not verified
 
+- KWin end-to-end in GitHub CI: the Arch container crashes before the
+  compositor registers on D-Bus. The nested host test above passes; see
+  [Testing](TESTING.md).
+
 - Interaction in a real session after capture: the sheet, drag and drop of
   folders, the global shortcut.
 - Windows 10 and 11 desktops, SmartScreen on a fresh machine.

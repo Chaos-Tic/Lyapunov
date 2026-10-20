@@ -120,7 +120,9 @@ error rather than a silent fallback.
 3. Wait until every started application shows a window (20 seconds at most),
    then a little longer: many applications resize themselves after appearing.
 4. Match saved windows to open ones, new windows first, in stacking order.
-   Windows already open are moved only if the user allowed it.
+   Windows already open are moved only if the user explicitly opted in; new
+   cards default to leaving them in place because app identity does not prove
+   which project or document each window contains.
 5. Fit each window onto a present screen (proportionally when its screen is
    gone or resized, always fully visible) and onto the same desktop (by
    identifier, then name, then position).

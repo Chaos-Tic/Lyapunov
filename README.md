@@ -24,10 +24,11 @@
 </p>
 
 A **card** is one activity: "Personal website", "Trip photos", "Paperwork". It
-keeps the applications and windows that belong to it, and the folders and
-documents you chose to add. **Resuming** a card reopens what is missing,
-reuses what is already open, and puts each window back on its screen,
-desktop and place, as far as your desktop allows. Before anything happens,
+keeps application identities and window layouts, plus the folders and
+documents you chose to add. **Resuming** starts missing applications, leaves
+open ones running, and arranges newly opened windows as far as your desktop
+allows. Moving windows that were already open is an explicit option: Lyapunov
+cannot tell which project or document they contain. Before anything happens,
 Lyapunov shows what it will do; afterwards it says exactly what it did:
 *window found*, *application started* or *unavailable*.
 
@@ -45,7 +46,7 @@ and what is not is listed in [Compatibility](#compatibility).
 <table>
 <tr>
 <td width="50%"><img src="docs/media/capture.png" alt="The Capture this space sheet: a name field, seven colour swatches with the chosen colour's name, the open applications with their window titles and a check box each, and buttons to add folders and documents."></td>
-<td width="50%"><img src="docs/media/plan.png" alt="In dark mode, the Resume Trip photos sheet lists darktable (will be started), Dolphin (open, windows arranged), Gwenview (unavailable, not installed) and two places to open, each with a check box."></td>
+<td width="50%"><img src="docs/media/plan.png" alt="In dark mode, the Resume Trip photos sheet warns that an open application's project is not verified, then lists darktable (will be started), Dolphin (open), Gwenview (unavailable) and two places to open, each with a check box."></td>
 </tr>
 <tr>
 <td><b>1. Capture.</b> Name the activity and pick a colour. Lyapunov lists the
@@ -54,7 +55,8 @@ and documents. Nothing is moved or closed. Window titles help you choose and
 are never saved.</td>
 <td><b>2. Resume.</b> Pick the card, press <b>Resume this space</b> (or Enter).
 The preview shows what will start, what is already open and what is missing;
-leave out any step. Applications already open are reused, never started twice.</td>
+leave out any step. An open application stays open, but its project is not
+identified or switched.</td>
 </tr>
 <tr>
 <td><img src="docs/media/report.png" alt="The report after resuming Trip photos: darktable started with 1 of 1 window placed, Dolphin window found with 1 of 2 windows placed and a note that 1 saved window was not reopened, Gwenview unavailable because it is not installed, and two places opened."></td>
@@ -62,8 +64,8 @@ leave out any step. Applications already open are reused, never started twice.</
 </tr>
 <tr>
 <td><b>3. Know what happened.</b> Each application and place gets an exact
-result. A screen that is no longer connected is reported, and its windows land
-on one that is.</td>
+result. When Lyapunov arranges a window from a screen that is no longer
+connected, it reports the missing screen and places that window on one that is.</td>
 <td><b>Light and dark, English and French.</b> The stack follows the system's
 colour scheme and language. Keyboard: arrows to move, Enter to resume, Delete,
 F2 to edit, the menu key for more.</td>
@@ -123,10 +125,14 @@ release: [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
 
 ## What a card does not restore
 
-Text you have not saved, the inside of an application (its tabs, history or
-selection), a website login, a password or a disconnected device. Lyapunov
-reopens applications, folders and documents and arranges windows; it never
-claims more. Browser tabs may come later, through an optional extension.
+Text you have not saved, the inside of an application (its project, tabs,
+history or selection), a website login, a password or a disconnected device.
+A card is a saved recipe, not a paused virtual desktop: it does not close,
+freeze or autosave applications. If VS Code is open on project A, resuming a
+card for project B does not switch that window to B or launch a second instance.
+Lyapunov reopens applications, folders and documents and arranges windows; it
+never claims more. Per-application project restoration may come later through
+explicit integrations. Browser tabs may come later, through an optional extension.
 
 ## Privacy
 

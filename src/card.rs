@@ -172,8 +172,9 @@ pub struct ResumePrefs {
     /// Show the planned actions before resuming.
     #[serde(default = "yes")]
     pub ask: bool,
-    /// Move windows that are already open to their saved places.
-    #[serde(default = "yes")]
+    /// Opt in to moving windows that are already open. App identity alone
+    /// cannot establish which project or document an existing window holds.
+    #[serde(default)]
     pub arrange_open_windows: bool,
 }
 
@@ -185,7 +186,7 @@ impl Default for ResumePrefs {
     fn default() -> Self {
         ResumePrefs {
             ask: true,
-            arrange_open_windows: true,
+            arrange_open_windows: false,
         }
     }
 }

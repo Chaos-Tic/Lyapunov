@@ -443,7 +443,9 @@ protected:
 
     void startResume(int i) {
         const CardView c = stack->all()[i];
-        if (!c.ask) { runResume(c, {}, c.arrange); return; }
+        // Moving an already open window can move another project's work.
+        // Always show the plan when that option is enabled.
+        if (!c.ask && !c.arrange) { runResume(c, {}, false); return; }
         const core::Result r = core::run({"plan", c.id});
         if (!r.ok()) { fail(r.error); return; }
         const QJsonObject plan = r.obj();
@@ -452,13 +454,14 @@ protected:
         auto steps = std::make_shared<QVector<Step>>();
         if (!plan["limitation"].toString().isEmpty())
             s->body->addWidget(label(L("Windows are not arranged on this desktop: applications, folders and documents still reopen."), "hint"));
+        s->body->addWidget(label(L("Lyapunov recognises the app, not its project or document. Open windows may belong to another space; nothing is closed."), "hint"));
         const bool canArrange = plan["capabilities"].toObject()["geometry"].toBool();
         for (const auto &v : plan["steps"].toArray()) {
             const QJsonObject st = v.toObject();
             const QString kind = st["kind"].toString();
             QString what;
             if (kind == "launch") what = L("Will be started");
-            else if (kind == "running") what = canArrange && st["windows"].toInt() > 0 ? L("Open — windows arranged") : L("Open");
+            else if (kind == "running") what = L("Open — project not verified");
             else if (kind == "open") what = L("Will be opened");
             else what = L("Unavailable") + " — " + translateNote(st["reason"].toString());
             QString title = st["name"].toString();
