@@ -720,10 +720,12 @@ fn run(command: Command) -> Result<()> {
                             error: None,
                         });
                         if !dry_run {
-                            // An import never replaces a card: it gets a new identity.
+                            // An import never replaces a card: it gets a new identity,
+                            // and its first resume always shows the plan first.
                             let fresh = Card::new(&c.name);
                             c.id = fresh.id;
                             c.modified = fresh.modified;
+                            c.resume.ask = true;
                             store.save(&c)?;
                             added += 1;
                         }

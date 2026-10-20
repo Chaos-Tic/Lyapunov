@@ -6,8 +6,12 @@
 // and application windows; Place(json) moves windows. Both answer in the
 // JSON shapes the KWin backend uses. Window titles are returned for the
 // capture preview only. Nothing is stored and nothing leaves the computer.
+//
+// Only the Lyapunov executable may call it: the caller's process is looked up
+// on the bus, and any other program receives an access-denied error.
 
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 import Meta from 'gi://Meta';
 import Shell from 'gi://Shell';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
@@ -21,6 +25,33 @@ const INTERFACE = `<node>
     <property name="Version" type="u" access="read"/>
   </interface>
 </node>`;
+
+// The executable behind a bus caller must be Lyapunov's core.
+function callerIsLyapunov(invocation) {
+    try {
+        const reply = invocation.get_connection().call_sync('org.freedesktop.DBus', '/org/freedesktop/DBus',
+            'org.freedesktop.DBus', 'GetConnectionUnixProcessID', new GLib.Variant('(s)', [invocation.get_sender()]),
+            new GLib.VariantType('(u)'), Gio.DBusCallFlags.NONE, 1000, null);
+        const [pid] = reply.deepUnpack();
+        const exe = GLib.file_read_link(`/proc/${pid}/exe`).replace(/ \(deleted\)$/, '');
+        return GLib.path_get_basename(exe) === 'lyapunov';
+    } catch (e) {
+        return false;
+    }
+}
+
+function guarded(invocation, answer) {
+    if (!callerIsLyapunov(invocation)) {
+        invocation.return_dbus_error('org.freedesktop.DBus.Error.AccessDenied',
+            'Only Lyapunov may list or arrange windows through this extension');
+        return;
+    }
+    try {
+        invocation.return_value(new GLib.Variant('(s)', [answer()]));
+    } catch (e) {
+        invocation.return_dbus_error('org.freedesktop.DBus.Error.Failed', String(e));
+    }
+}
 
 function rect(r) {
     return {x: r.x, y: r.y, width: r.width, height: r.height};
@@ -83,7 +114,15 @@ class Service {
         return 1;
     }
 
-    Snapshot() {
+    SnapshotAsync(params, invocation) {
+        guarded(invocation, () => this._snapshot());
+    }
+
+    PlaceAsync([json], invocation) {
+        guarded(invocation, () => this._place(json));
+    }
+
+    _snapshot() {
         const display = global.display;
         const workspaces = global.workspace_manager;
         const tracker = Shell.WindowTracker.get_default();
@@ -120,7 +159,7 @@ class Service {
         return JSON.stringify(out);
     }
 
-    Place(json) {
+    _place(json) {
         const ops = JSON.parse(json);
         if (!Array.isArray(ops))
             throw new Error('expected a list of placements');

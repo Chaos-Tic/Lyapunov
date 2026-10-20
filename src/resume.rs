@@ -198,7 +198,9 @@ pub fn plan(card: &Card, snap: &Snapshot, index: &AppIndex, backend: &dyn Backen
         });
     }
     for (i, place) in card.places.iter().enumerate() {
-        let exists = Path::new(&place.path).exists();
+        let path = Path::new(&place.path);
+        let refused = apps::refuse_place(path, place.kind == PlaceKind::Folder);
+        let exists = path.exists() && refused.is_none();
         let name = Path::new(&place.path)
             .file_name()
             .map(|n| n.to_string_lossy().into_owned())
@@ -211,7 +213,9 @@ pub fn plan(card: &Card, snap: &Snapshot, index: &AppIndex, backend: &dyn Backen
             open: 0,
             path: Some(place.path.clone()),
             folder: Some(place.kind == PlaceKind::Folder),
-            reason: (!exists).then(|| "not found".into()),
+            reason: refused
+                .map(str::to_string)
+                .or_else(|| (!exists).then(|| "not found".into())),
         });
     }
     Plan {
@@ -424,13 +428,13 @@ pub fn execute(
         if opts.selected(&step.key) {
             if step.kind == StepKind::Unavailable {
                 o.status = Status::Unavailable;
-                o.notes.push(format!("{} was not found", place.path));
+                o.notes.push(step.reason.clone().unwrap_or_else(|| "not found".into()));
             } else {
                 progress(Progress::Opening {
                     key: &step.key,
                     name: &step.name,
                 });
-                match apps::open_place(Path::new(&place.path)) {
+                match apps::open_place(Path::new(&place.path), place.kind == PlaceKind::Folder) {
                     Ok(()) => o.status = Status::Opened,
                     Err(e) => {
                         o.status = Status::Failed;

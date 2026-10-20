@@ -188,6 +188,45 @@ inline void emblem(QPainter &p, QPointF c, qreal radius, const Tint &t, const Th
     p.restore();
 }
 
+// The application logo (assets/lyapunov.svg), drawn in a square: two stacked
+// cards, the front one carrying a trajectory that settles on a point.
+inline void logo(QPainter &p, const QRectF &box) {
+    p.save(); p.setRenderHint(QPainter::Antialiasing);
+    p.translate(box.topLeft()); p.scale(box.width() / 256.0, box.height() / 256.0);
+    p.save(); p.translate(136, 90); p.rotate(-9); p.translate(-136, -90);
+    QLinearGradient back(58, 34, 214, 146); back.setColorAt(0, QColor("#9fdcf8")); back.setColorAt(1, QColor("#6aa8f0"));
+    p.setPen(Qt::NoPen); p.setBrush(back); p.drawRoundedRect(QRectF(58, 34, 156, 112), 30, 30);
+    p.restore();
+    QLinearGradient front(34, 72, 230, 218);
+    front.setColorAt(0, QColor("#ffc39a")); front.setColorAt(.55, QColor("#f29bb8")); front.setColorAt(1, QColor("#a98cf0"));
+    p.setBrush(front); p.drawRoundedRect(QRectF(34, 72, 196, 146), 36, 36);
+    QLinearGradient sheen(0, 72, 0, 218); sheen.setColorAt(0, rgba(255, 255, 255, .55)); sheen.setColorAt(.45, rgba(255, 255, 255, 0));
+    p.setBrush(sheen); p.drawRoundedRect(QRectF(34, 72, 196, 146), 36, 36);
+    p.setBrush(Qt::NoBrush); p.setPen(QPen(rgba(255, 255, 255, .75), 3));
+    p.drawRoundedRect(QRectF(35.5, 73.5, 193, 143), 34.5, 34.5);
+    QPainterPath spiral;
+    const qreal start = 200 * M_PI / 180, turns = 2.15, k = .2;
+    for (int i = 0; i <= 220; ++i) {
+        const qreal t = i / 220.0 * turns * 2 * M_PI, r = 52 * std::exp(-k * t), a = start - t;
+        const QPointF pt(132 + r * std::cos(a), 140 + r * std::sin(a));
+        if (i == 0) spiral.moveTo(pt); else spiral.lineTo(pt);
+    }
+    p.setPen(QPen(Qt::white, 11, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin)); p.drawPath(spiral);
+    p.setPen(Qt::NoPen); p.setBrush(Qt::white); p.drawEllipse(QPointF(132, 140), 9, 9);
+    p.restore();
+}
+
+inline QIcon appIcon() {
+    QIcon icon = QIcon::fromTheme("lyapunov");
+    if (!icon.isNull()) return icon;
+    for (int size : {16, 24, 32, 48, 64, 128, 256}) {
+        QPixmap pm(size, size); pm.fill(Qt::transparent);
+        QPainter p(&pm); logo(p, QRectF(0, 0, size, size)); p.end();
+        icon.addPixmap(pm);
+    }
+    return icon;
+}
+
 // Small line glyphs, drawn in the current pen.
 inline void glyph(QPainter &p, const QString &name, QPointF c, qreal s = 1.0) {
     p.save(); p.translate(c); p.scale(s, s); p.setBrush(Qt::NoBrush);

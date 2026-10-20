@@ -7,7 +7,6 @@
 
 use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
-use std::path::Path;
 
 pub const FORMAT: &str = "lyapunov-card";
 pub const VERSION: u32 = 1;
@@ -357,17 +356,24 @@ pub fn valid_exe(path: &str) -> bool {
     lower.ends_with(".exe") && is_absolute_anywhere(path) && !path.contains('"')
 }
 
-/// Absolute on Linux (`/home/…`) or on Windows (`C:\…`, `\\server\share`), so a
-/// card stays valid when inspected on another platform.
+/// Absolute on Linux (`/home/…`) or on Windows (`C:\…`), so a card stays valid
+/// when inspected on another platform. Network paths (`\\server\share`,
+/// `//server`) are refused: opening one would contact that server, and on
+/// Windows send it the user's credentials.
 pub fn is_absolute_anywhere(path: &str) -> bool {
+    if is_network_path(path) {
+        return false;
+    }
     if path.starts_with('/') {
         return true;
     }
     let b = path.as_bytes();
-    if b.len() >= 3 && b[0].is_ascii_alphabetic() && b[1] == b':' && (b[2] == b'\\' || b[2] == b'/') {
-        return true;
-    }
-    (path.starts_with("\\\\") && path.len() > 2) || Path::new(path).is_absolute()
+    b.len() >= 3 && b[0].is_ascii_alphabetic() && b[1] == b':' && (b[2] == b'\\' || b[2] == b'/')
+}
+
+pub fn is_network_path(path: &str) -> bool {
+    let p = path.trim_start();
+    p.starts_with("\\\\") || p.starts_with("//") || p.starts_with("\\/") || p.starts_with("/\\")
 }
 
 fn check_text(what: &str, value: &str) -> Result<()> {
@@ -487,7 +493,12 @@ mod tests {
     #[test]
     fn windows_paths_are_absolute_too() {
         assert!(is_absolute_anywhere("C:\\Users\\a\\Documents"));
-        assert!(is_absolute_anywhere("\\\\server\\share"));
+        assert!(
+            !is_absolute_anywhere("\\\\attacker\\share\\doc.pdf"),
+            "network paths are refused"
+        );
+        assert!(!is_absolute_anywhere("//attacker/share"));
+        assert!(!valid_exe("\\\\attacker\\share\\app.exe"));
         assert!(valid_exe("C:\\Program Files\\App\\app.exe"));
         assert!(!valid_exe("app.exe"));
     }

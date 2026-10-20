@@ -30,6 +30,14 @@ for _ in $(seq 50); do
 done
 busctl --user status io.github.ChaosTic.Lyapunov.Shell >/dev/null 2>&1 || {
     echo "the extension did not start" >&2; grep -i -E 'lyapunov|error|JS' /tmp/shell.log | tail -20 >&2; exit 1; }
+# Any program other than Lyapunov is refused.
+answer=$(gdbus call --session --dest io.github.ChaosTic.Lyapunov.Shell --object-path /io/github/ChaosTic/Lyapunov/Shell \
+    --method io.github.ChaosTic.Lyapunov.Shell.Snapshot 2>&1 || true)
+if [[ $answer == *AccessDenied* ]]; then
+    echo "  ok  other programs cannot list windows through the extension"
+else
+    echo "FAIL: the extension answered a program other than Lyapunov" >&2; exit 1
+fi
 export WAYLAND_DISPLAY=wayland-0 GDK_BACKEND=wayland
 export LYAPUNOV=/src/target/release/lyapunov LYA_EVIDENCE=/tmp/evidence LYAPUNOV_BACKEND=gnome
 export LYA_TEST_CMD="gnome-text-editor --standalone" LYA_TEST_ID=org.gnome.TextEditor.desktop LYA_SECOND_DESKTOP=1

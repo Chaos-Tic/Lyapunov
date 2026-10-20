@@ -623,10 +623,107 @@ pub fn spawn_detached(mut cmd: Command) -> Result<u32> {
     Ok(child.id())
 }
 
-/// Opens a folder or document with the user's default application.
-pub fn open_place(path: &Path) -> Result<()> {
+/// File types that run code when "opened": the default opener would execute
+/// them. A card only ever opens folders and documents.
+const RUNNABLE: &[&str] = &[
+    "exe",
+    "com",
+    "bat",
+    "cmd",
+    "ps1",
+    "psm1",
+    "vbs",
+    "vbe",
+    "js",
+    "jse",
+    "wsf",
+    "wsh",
+    "msi",
+    "msp",
+    "mst",
+    "scr",
+    "lnk",
+    "url",
+    "hta",
+    "cpl",
+    "pif",
+    "reg",
+    "jar",
+    "appref-ms",
+    "application",
+    "msc",
+    "appx",
+    "msix",
+    "appinstaller",
+    "desktop",
+    "sh",
+    "bash",
+    "zsh",
+    "fish",
+    "csh",
+    "run",
+    "bin",
+    "appimage",
+    "flatpakref",
+    "flatpakrepo",
+    "snap",
+    "deb",
+    "rpm",
+    "pkg",
+    "command",
+    "tool",
+    "py",
+    "pyw",
+    "pl",
+    "rb",
+    "elf",
+    "so",
+    "dll",
+    "sys",
+    "inf",
+];
+
+/// Why a place must not be opened, if it must not.
+pub fn refuse_place(path: &Path, folder: bool) -> Option<&'static str> {
+    if crate::card::is_network_path(&path.to_string_lossy()) {
+        return Some("network locations are not opened");
+    }
+    let meta = std::fs::metadata(path).ok()?;
+    if folder != meta.is_dir() {
+        return Some(if folder {
+            "no longer a folder"
+        } else {
+            "no longer a document"
+        });
+    }
+    if meta.is_dir() {
+        return None;
+    }
+    let ext = path
+        .extension()
+        .map(|e| e.to_string_lossy().to_lowercase())
+        .unwrap_or_default();
+    if RUNNABLE.contains(&ext.as_str()) {
+        return Some("programs and scripts are not opened from a card");
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        if meta.permissions().mode() & 0o111 != 0 {
+            return Some("programs and scripts are not opened from a card");
+        }
+    }
+    None
+}
+
+/// Opens a folder or document with the user's default application. Programs,
+/// scripts, launchers and network locations are refused (`refuse_place`).
+pub fn open_place(path: &Path, folder: bool) -> Result<()> {
     if !path.exists() {
         bail!("not found");
+    }
+    if let Some(reason) = refuse_place(path, folder) {
+        bail!("{reason}");
     }
     #[cfg(windows)]
     {
@@ -855,6 +952,29 @@ mod tests {
         });
         assert_eq!(unknown.desktop, None);
         assert_eq!(unknown.name, "My-tool");
+    }
+
+    #[test]
+    fn programs_and_scripts_are_never_opened() {
+        let d = tempfile::tempdir().unwrap();
+        let write = |name: &str| {
+            let p = d.path().join(name);
+            std::fs::write(&p, b"x").unwrap();
+            p
+        };
+        assert_eq!(refuse_place(&write("report.pdf"), false), None);
+        assert!(refuse_place(&write("setup.EXE"), false).is_some());
+        assert!(refuse_place(&write("evil.desktop"), false).is_some());
+        assert!(refuse_place(&write("run.sh"), false).is_some());
+        assert!(refuse_place(&write("notes.txt"), true).is_some(), "the kind must match");
+        assert_eq!(refuse_place(d.path(), true), None);
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let bin = write("tool");
+            std::fs::set_permissions(&bin, std::fs::Permissions::from_mode(0o755)).unwrap();
+            assert!(refuse_place(&bin, false).is_some());
+        }
     }
 
     #[test]
