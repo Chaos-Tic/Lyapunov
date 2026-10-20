@@ -105,6 +105,25 @@ public:
         refreshNotice();
     }
 
+    // Run from an AppImage: its folder changes at every start, so the GNOME
+    // extension is told again which executable to answer, and the menu entry
+    // is offered when there is none.
+    void appImageSetUp() {
+        if (!qEnvironmentVariableIsSet("APPIMAGE")) return;
+        if (qEnvironmentVariable("XDG_CURRENT_DESKTOP").contains("GNOME", Qt::CaseInsensitive))
+            core::run({"gnome-extension", "--trust"});
+        const QString entry = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/applications/lyapunov.desktop";
+        if (QFile::exists(entry) || !noticeRow->isHidden()) return;
+        notice->setText(L("Add Lyapunov to the applications menu?"));
+        noticeAction->setText(L("Add")); noticeAction->show(); noticeAction->disconnect();
+        connect(noticeAction, &QPushButton::clicked, this, [this] {
+            const core::Result r = core::run({"integrate"});
+            if (!r.ok()) { fail(r.error); return; }
+            noticeRow->hide();
+        });
+        noticeRow->show();
+    }
+
     // Opens straight on a sheet (from the command line or the launcher's action).
     void startCapture() { captureSheet(nullptr); }
 
@@ -685,7 +704,7 @@ int main(int argc, char **argv) {
         });
     });
     QTimer::singleShot(0, &w, [&w, args] {
-        w.load(); w.diagnose();
+        w.load(); w.diagnose(); w.appImageSetUp();
         if (args.contains("--capture")) w.startCapture();
     });
     return app.exec();

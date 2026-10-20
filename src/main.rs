@@ -163,6 +163,9 @@ enum Command {
         /// Only report whether it is installed, enabled and running
         #[arg(long)]
         status: bool,
+        /// Only trust this executable again (an AppImage moves at each start)
+        #[arg(long, conflicts_with = "status")]
+        trust: bool,
         #[arg(long)]
         json: bool,
     },
@@ -179,6 +182,8 @@ enum Command {
         gnome_extension: bool,
         #[arg(long)]
         remove: bool,
+        #[arg(long)]
+        json: bool,
     },
 }
 
@@ -205,8 +210,8 @@ fn main() {
         | Command::Export { json, .. }
         | Command::Import { json, .. }
         | Command::Doctor { json }
-        | Command::GnomeExtension { json, .. } => *json,
-        Command::Integrate { .. } => false,
+        | Command::GnomeExtension { json, .. }
+        | Command::Integrate { json, .. } => *json,
     };
     if let Err(e) = run(cli.command) {
         if json {
@@ -830,8 +835,17 @@ fn run(command: Command) -> Result<()> {
             }
             Ok(())
         }
-        Command::GnomeExtension { status, json } => {
+        Command::GnomeExtension { status, trust, json } => {
             let data = integrate::default_data_dir()?;
+            if trust {
+                let me = std::fs::canonicalize(std::env::current_exe()?)?;
+                let file = integrate::trust_for_gnome(&me)?;
+                if json {
+                    return print_json(&serde_json::json!({ "trusted": me, "file": file }));
+                }
+                println!("Trusted {}", me.display());
+                return Ok(());
+            }
             let mut installed = integrate::gnome_extension_installed(&data);
             let mut enabled = false;
             let mut note = None;
@@ -885,29 +899,43 @@ fn run(command: Command) -> Result<()> {
             exe,
             gnome_extension,
             remove,
+            json,
         } => {
             let data = match data_dir {
                 Some(d) => d,
                 None => integrate::default_data_dir()?,
             };
             if remove {
-                for p in integrate::remove(&data)? {
+                let removed = integrate::remove(&data)?;
+                if json {
+                    return print_json(&serde_json::json!({ "removed": removed }));
+                }
+                for p in removed {
                     println!("removed {}", p.display());
                 }
                 return Ok(());
             }
+            // From an AppImage, the menu entry starts the AppImage file itself:
+            // the folder it runs from changes at every start.
             let exe = match exe {
                 Some(e) => e,
-                None => {
-                    let me = std::env::current_exe()?;
-                    me.with_file_name("lyapunov-desktop").to_string_lossy().into_owned()
-                }
+                None => match std::env::var("APPIMAGE").ok().filter(|a| Path::new(a).is_file()) {
+                    Some(appimage) => appimage,
+                    None => {
+                        let me = std::env::current_exe()?;
+                        me.with_file_name("lyapunov-desktop").to_string_lossy().into_owned()
+                    }
+                },
             };
-            for p in integrate::install(&data, &exe)? {
-                println!("wrote {}", p.display());
-            }
+            let mut written = integrate::install(&data, &exe)?;
             if gnome_extension {
-                println!("wrote {}", integrate::stage_gnome_extension(&data)?.display());
+                written.push(integrate::stage_gnome_extension(&data)?);
+            }
+            if json {
+                return print_json(&serde_json::json!({ "written": written }));
+            }
+            for p in written {
+                println!("wrote {}", p.display());
             }
             Ok(())
         }

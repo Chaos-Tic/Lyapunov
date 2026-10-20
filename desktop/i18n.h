@@ -113,6 +113,7 @@ inline QString L(const QString &english) {
          "Les cartes importées ne lancent rien tant que vous ne les reprenez pas."},
         {"Lyapunov cards (*.json)", "Cartes Lyapunov (*.json)"}, {"Exported to %1", "Exporté vers %1"},
         {"Save a card and pick it up later.", "Enregistrez une activité, reprenez-la plus tard."},
+        {"Add Lyapunov to the applications menu?", "Ajouter Lyapunov au menu des applications ?"}, {"Add", "Ajouter"},
         {"Version %1. Everything stays on this computer: no account, no network.",
          "Version %1. Tout reste sur cet ordinateur : aucun compte, aucun réseau."},
     };
