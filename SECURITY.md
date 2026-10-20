@@ -51,8 +51,8 @@ answers only a caller whose executable is named `lyapunov` **and** is either
 installed by a package (owned by root, writable by nobody else) or listed in
 the user's private trust file `~/.config/lyapunov/gnome-trusted` (mode 0600),
 written by `lyapunov gnome-extension`. A deleted binary, or a process started
-with injected libraries (`LD_PRELOAD`, `LD_LIBRARY_PATH`, `LD_AUDIT`), is
-refused. Any other program receives an access-denied error.
+with injected libraries (`LD_PRELOAD`, `LD_LIBRARY_PATH`, `LD_AUDIT`), or
+running under a debugger, is refused. Any other program receives an access-denied error.
 
 This gate keeps other programs from reading window titles and positions by
 accident or casually. It is not a barrier against malicious code already

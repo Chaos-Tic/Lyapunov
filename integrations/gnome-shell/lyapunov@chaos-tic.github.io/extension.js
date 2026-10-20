@@ -62,6 +62,17 @@ function injected(pid) {
     }
 }
 
+// A process under a debugger can be made to run anything.
+function traced(pid) {
+    try {
+        const [, bytes] = GLib.file_get_contents(`/proc/${pid}/status`);
+        const line = new TextDecoder().decode(bytes).split('\n').find(l => l.startsWith('TracerPid:'));
+        return !line || Number(line.split(':')[1]) !== 0;
+    } catch (e) {
+        return true;
+    }
+}
+
 // The executable behind a bus caller must be Lyapunov's core, installed by a
 // package or trusted by the user. A deleted or renamed binary is refused.
 function callerIsLyapunov(invocation) {
@@ -71,7 +82,7 @@ function callerIsLyapunov(invocation) {
             new GLib.VariantType('(u)'), Gio.DBusCallFlags.NONE, 1000, null);
         const [pid] = reply.deepUnpack();
         const exe = GLib.file_read_link(`/proc/${pid}/exe`);
-        if (exe.endsWith(' (deleted)') || GLib.path_get_basename(exe) !== 'lyapunov' || injected(pid))
+        if (exe.endsWith(' (deleted)') || GLib.path_get_basename(exe) !== 'lyapunov' || injected(pid) || traced(pid))
             return false;
         return systemInstalled(exe) || trustedPaths().includes(exe);
     } catch (e) {
