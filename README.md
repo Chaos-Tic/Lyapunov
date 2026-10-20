@@ -36,9 +36,11 @@ Lyapunov shows what it will do; afterwards it says exactly what it did:
 Everything runs on your computer. No account, no network, no telemetry.
 Cards are small JSON files in a private folder.
 
-**Status: under development, no release yet.** Install it [from source](#install)
-today; packages for each distribution follow the first release. What is verified
-and what is not is listed in [Compatibility](#compatibility).
+**Version 0.1.0.** Install it [from source](#install) or use a package attached
+to the [first release](https://github.com/Chaos-Tic/Lyapunov/releases/tag/v0.1.0).
+Package-manager channels are listed in [Packaging](packaging/README.md) as
+they become available. What is verified and what is not is listed in
+[Compatibility](#compatibility).
 
 [Install](#install) · [How it works](#how-it-works) · [Compatibility](#compatibility) · [User guide](docs/USER_GUIDE.md) · [Troubleshooting](docs/TROUBLESHOOTING.md) · [Security](SECURITY.md)
 
@@ -91,7 +93,7 @@ Lyapunov see and arrange windows (log out and back in once afterwards). On KDE
 Plasma, **Meta+Alt+Space** opens Lyapunov. Remove it with `./uninstall.sh`;
 your cards are kept unless you say otherwise.
 
-Packages built by CI on every change, ready for the first release:
+Release packages are built and checked by the tagged CI run:
 
 | System | Package | Built and installed in CI |
 | --- | --- | --- |
