@@ -286,6 +286,10 @@ inline QString styleSheet(const Theme &th) {
         QPushButton#flat { background: transparent; border: none; padding: 4px 8px; color: %2; }
         QPushButton#flat:hover { color: %1; }
         QPushButton#flat:focus { border: 2px solid %9; border-radius: 8px; }
+        QToolButton#menu { background: %5; border: 1px solid %4; border-radius: 17px; padding: 0 0 4px 0; }
+        QToolButton#menu:hover { background: %6; }
+        QToolButton#menu:focus { border: 2px solid %9; }
+        QToolButton#menu::menu-indicator { image: none; width: 0; }
         QToolButton#swatch { border: 2px solid transparent; border-radius: 15px; min-width: 26px; min-height: 26px; }
         QToolButton#swatch:checked { border: 2px solid %1; }
         QToolButton#swatch:focus { border: 2px solid %9; }

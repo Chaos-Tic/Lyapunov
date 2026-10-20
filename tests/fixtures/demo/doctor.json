@@ -1,0 +1,1 @@
+{"version": "0.1.0", "session": {"os": "linux", "session_type": "wayland", "desktop": "KDE"}, "backend": "kwin", "capabilities": {"list": true, "geometry": true, "desktops": true, "states": true, "tiling": false}, "data_dir": "/home/alex/.local/share/lyapunov", "outputs": 2, "desktops": 4, "windows": 9, "cards": 5}
