@@ -68,7 +68,8 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/lyapunov.desktop
 %cargo_test
 
 %files
-%license %{_datadir}/licenses/lyapunov/LICENSE LICENSE.dependencies
+%license %{_datadir}/licenses/lyapunov/LICENSE
+%license LICENSE.dependencies
 %if %{with vendor}
 %license cargo-vendor.txt
 %endif
