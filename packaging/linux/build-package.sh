@@ -34,7 +34,7 @@ deb)
     . "$HOME/.cargo/env"
     build
     stage=$(mktemp -d)/lyapunov
-    sh packaging/linux/stage.sh "$stage"
+    DESTDIR="$stage" cmake --install build --prefix /usr --strip
     install -d "$stage/usr/share/doc/lyapunov"
     cat >"$stage/usr/share/doc/lyapunov/copyright" <<EOT
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
@@ -77,7 +77,7 @@ rpm)
     dnf install -y gcc-c++ cmake qt6-qtbase-devel cargo rust rpm-build
     build
     stage=$(mktemp -d)/lyapunov
-    sh packaging/linux/stage.sh "$stage"
+    DESTDIR="$stage" cmake --install build --prefix /usr --strip
     top=$(mktemp -d)
     # Library requirements are generated from the executables by rpmbuild.
     cat >"$top/lyapunov.spec" <<EOT

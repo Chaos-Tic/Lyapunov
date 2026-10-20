@@ -27,12 +27,6 @@ ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
 	cargo test --release --frozen
 endif
 
-override_dh_auto_install:
-	install -Dm755 target/release/lyapunov debian/lyapunov/usr/bin/lyapunov
-	install -Dm755 debian/build/lyapunov-desktop debian/lyapunov/usr/bin/lyapunov-desktop
-	debian/lyapunov/usr/bin/lyapunov integrate --data-dir debian/lyapunov/usr/share --gnome-extension \
-		--exe /usr/bin/lyapunov-desktop >/dev/null
-
 # dh_clean deletes *.orig files, but cargo checks the crates' Cargo.toml.orig.
 override_dh_clean:
 	dh_clean -XCargo.toml.orig

@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.21)
 project(Lyapunov VERSION 0.1.0 LANGUAGES CXX)
+include(GNUInstallDirs)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -14,7 +15,23 @@ if(WIN32)
 endif()
 target_link_libraries(lyapunov-desktop PRIVATE Qt6::Widgets Qt6::Network)
 target_compile_definitions(lyapunov-desktop PRIVATE LYAPUNOV_VERSION="${PROJECT_VERSION}")
-install(TARGETS lyapunov-desktop RUNTIME DESTINATION bin)
+install(TARGETS lyapunov-desktop RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+if(UNIX AND NOT APPLE)
+    set(LYAPUNOV_CLI_BINARY "${PROJECT_SOURCE_DIR}/target/release/lyapunov" CACHE FILEPATH
+        "Path to the separately built Rust CLI")
+    option(LYAPUNOV_INSTALL_GNOME_EXTENSION "Stage the GNOME Shell extension" ON)
+    install(PROGRAMS "${LYAPUNOV_CLI_BINARY}" DESTINATION ${CMAKE_INSTALL_BINDIR})
+    install(FILES LICENSE DESTINATION ${CMAKE_INSTALL_DATADIR}/licenses/lyapunov)
+    if(LYAPUNOV_INSTALL_GNOME_EXTENSION)
+        install(FILES
+            integrations/gnome-shell/lyapunov@chaos-tic.github.io/extension.js
+            integrations/gnome-shell/lyapunov@chaos-tic.github.io/metadata.json
+            DESTINATION ${CMAKE_INSTALL_DATADIR}/gnome-shell/extensions/lyapunov@chaos-tic.github.io)
+    endif()
+    configure_file(packaging/linux/install-integration.cmake.in
+        "${CMAKE_CURRENT_BINARY_DIR}/install-integration.cmake" @ONLY)
+    install(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/install-integration.cmake")
+endif()
 include(CTest)
 if(BUILD_TESTING)
     qt_add_executable(lyapunov-cardstack-test tests/cardstack.cpp)

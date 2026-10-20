@@ -93,6 +93,18 @@ Lyapunov see and arrange windows (log out and back in once afterwards). On KDE
 Plasma, **Meta+Alt+Space** opens Lyapunov. Remove it with `./uninstall.sh`;
 your cards are kept unless you say otherwise.
 
+For a direct source install using the standard CMake install rule:
+
+```sh
+cargo build --release --locked
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
+  -DLYAPUNOV_INSTALL_GNOME_EXTENSION=OFF
+cmake --build build
+cmake --install build --prefix "$HOME/.local"
+```
+
+`install.sh` also installs missing build tools and offers the GNOME extension.
+
 Release packages are built and checked by the tagged CI run:
 
 | System | Package | Built and installed in CI |
@@ -102,6 +114,17 @@ Release packages are built and checked by the tagged CI run:
 | Arch Linux | `PKGBUILD` (AUR) | Arch |
 | Any recent Linux | AppImage | built on Ubuntu 22.04 |
 | Windows 10 and 11 | `Lyapunov-Setup-x64.exe` | silent install, capture, resume, uninstall |
+
+For packages that receive updates through the system package manager:
+
+| System | Install |
+| --- | --- |
+| Debian 12+ and Ubuntu 24.04+ | Follow the [Chaos-Tic apt repository instructions](https://github.com/Chaos-Tic/apt#install), then `sudo apt install lyapunov` |
+| Fedora 43–45 | `sudo dnf copr enable chaostic/lyapunov && sudo dnf install lyapunov` |
+| Arch Linux | Build and install [`lyapunov` from the AUR](https://aur.archlinux.org/packages/lyapunov) |
+
+The Windows installer and standalone Linux files are on the
+[v0.1.0 release page](https://github.com/Chaos-Tic/Lyapunov/releases/tag/v0.1.0).
 
 ## Compatibility
 

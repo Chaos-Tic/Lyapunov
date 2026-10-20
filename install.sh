@@ -142,14 +142,13 @@ done
 # ---------------------------------------------------------------------------
 step "Building Lyapunov"
 cargo build --release --locked
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF >/dev/null
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF \
+    -DLYAPUNOV_INSTALL_GNOME_EXTENSION=OFF >/dev/null
 cmake --build build --parallel "$(nproc 2>/dev/null || echo 2)"
 
 step "Installing in ~/.local"
 pkill -x lyapunov-desktop 2>/dev/null || true
-install -Dm755 target/release/lyapunov "$HOME/.local/bin/lyapunov"
-install -Dm755 build/lyapunov-desktop "$HOME/.local/bin/lyapunov-desktop"
-"$HOME/.local/bin/lyapunov" integrate | sed 's/^/    /'
+cmake --install build --prefix "$HOME/.local" >/dev/null
 command -v update-desktop-database >/dev/null && update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
 case ":$PATH:" in
     *":$HOME/.local/bin:"*) ;;

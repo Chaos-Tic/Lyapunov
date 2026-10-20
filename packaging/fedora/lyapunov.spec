@@ -57,23 +57,18 @@ on this computer.
 %if %{with vendor}
 %cargo_vendor_manifest
 %endif
-%cmake -DBUILD_TESTING=OFF
+%cmake -DBUILD_TESTING=OFF -DLYAPUNOV_CLI_BINARY="$PWD/target/rpm/lyapunov"
 %cmake_build
 
 %install
-install -Dpm755 target/rpm/lyapunov %{buildroot}%{_bindir}/lyapunov
-install -Dpm755 %{__cmake_builddir}/lyapunov-desktop %{buildroot}%{_bindir}/lyapunov-desktop
-# The launcher, icons and GNOME Shell extension `lyapunov integrate` writes,
-# here for the system executable.
-%{buildroot}%{_bindir}/lyapunov integrate --data-dir %{buildroot}%{_datadir} \
-    --exe %{_bindir}/lyapunov-desktop --gnome-extension >/dev/null
+%cmake_install
 
 %check
 desktop-file-validate %{buildroot}%{_datadir}/applications/lyapunov.desktop
 %cargo_test
 
 %files
-%license LICENSE LICENSE.dependencies
+%license %{_datadir}/licenses/lyapunov/LICENSE LICENSE.dependencies
 %if %{with vendor}
 %license cargo-vendor.txt
 %endif
