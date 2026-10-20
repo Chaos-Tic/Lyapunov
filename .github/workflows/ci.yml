@@ -1,0 +1,331 @@
+name: Build and test
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  rust:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+      - run: cargo fmt --check
+      - run: cargo clippy --locked --all-targets -- -D warnings
+      - run: cargo test --locked
+      - run: cargo build --release --locked
+      # The Windows backend lists this runner's own windows.
+      - run: cargo run --release --locked -- doctor
+  # Edition 2024's minimum, the Rust that Ubuntu 24.04 builds the PPA with.
+  rust-minimum:
+    runs-on: ubuntu-latest
+    container: rust:1.85
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: cargo test --locked
+  linux-families:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ['debian:stable', 'debian:testing', 'archlinux:latest', 'fedora:latest', 'fedora:rawhide']
+    container: ${{ matrix.image }}
+    steps:
+      - name: Install build tools
+        shell: bash
+        run: |
+          if command -v apt-get >/dev/null; then
+            apt-get update && apt-get install -y curl ca-certificates build-essential git
+          elif command -v pacman >/dev/null; then
+            pacman -Syu --noconfirm --needed base-devel curl git
+          else
+            dnf install -y gcc gcc-c++ make curl git
+          fi
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+      - run: cargo test --locked
+      - run: cargo run --locked -- doctor
+  # Capture and resume end to end, each in its own session on a virtual screen.
+  sessions:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        session: [openbox, xfwm4, i3, sway, gnome, kwin]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+      - name: Run
+        run: |
+          case ${{ matrix.session }} in
+            gnome) ./scripts/test-gnome-container.sh ;;
+            kwin) ./scripts/test-kwin-container.sh ;;
+            *) ./scripts/test-sessions-container.sh ${{ matrix.session }} ;;
+          esac
+  desktop-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: sudo apt-get update && sudo apt-get install -y qt6-base-dev
+      - run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - run: cmake --build build --parallel 2
+      - run: ctest --test-dir build --output-on-failure
+      - run: QT_QPA_PLATFORM=offscreen build/lyapunov-desktop --smoke-test
+      # The window in each state, light and dark, English and French, from
+      # canned answers: for visual review.
+      - run: |
+          for look in light dark; do
+            for lang in en fr; do
+              QT_QPA_PLATFORM=offscreen LYAPUNOV_THEME=$look LYAPUNOV_LANGUAGE=$lang LYAPUNOV_REDUCED_MOTION=1 \
+                LYAPUNOV_DEMO_DIR=tests/fixtures/demo build/lyapunov-desktop --render renders/$look-$lang
+            done
+          done
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: renders
+          path: renders
+  desktop-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4
+        with:
+          version: '6.8.3'
+          cache: true
+      - run: cmake -S . -B build
+      - run: cmake --build build --config Release
+      - run: ctest --test-dir build -C Release --output-on-failure
+      # lyapunov-desktop is a windowed program: PowerShell does not wait for it.
+      - shell: pwsh
+        run: |
+          windeployqt --release build/Release/lyapunov-desktop.exe
+          $env:QT_QPA_PLATFORM = 'offscreen'
+          $run = Start-Process build/Release/lyapunov-desktop.exe --smoke-test -Wait -PassThru
+          if ($run.ExitCode) { throw "smoke test failed: $($run.ExitCode)" }
+      # The installer people download: Lyapunov-Setup-x64.exe.
+      # Qt is bundled under the LGPL: its license and the crates' notices go in.
+      - name: Third-party notices
+        shell: bash
+        run: |
+          mkdir -p dist/Lyapunov
+          packaging/licenses/notices.sh dist/Lyapunov/THIRD-PARTY-NOTICES.txt x86_64-pc-windows-msvc
+      - name: Build the Windows installer
+        shell: pwsh
+        run: |
+          cargo build --release --locked
+          $root = 'dist/Lyapunov'
+          New-Item -ItemType Directory -Force $root | Out-Null
+          Copy-Item target/release/lyapunov.exe, build/Release/lyapunov-desktop.exe $root
+          windeployqt --release --no-translations "$root/lyapunov-desktop.exe"
+          $version = (Select-String -Path Cargo.toml -Pattern '^version = "(.+)"').Matches[0].Groups[1].Value
+          choco install -y --no-progress innosetup
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /Q "/DAppVersion=$version" packaging/windows/lyapunov.iss
+          if ($LASTEXITCODE) { throw 'Inno Setup failed' }
+      - name: Install, use and uninstall silently
+        shell: pwsh
+        run: |
+          $setup = Start-Process dist/Lyapunov-Setup-x64.exe -Wait -PassThru -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/TASKS=desktopicon', '/LANG=fr', '/LOG=setup.log'
+          if ($setup.ExitCode) { Get-Content setup.log; throw "setup failed: $($setup.ExitCode)" }
+          if (-not (Select-String -Quiet -Path (Join-Path $env:LOCALAPPDATA 'lyapunov\lyapunov.conf') -Pattern '^Language=fr')) { throw 'the setup language was not passed to the app' }
+          $installed = Join-Path $env:LOCALAPPDATA 'Programs\Lyapunov'
+          foreach ($file in 'lyapunov.exe', 'lyapunov-desktop.exe', 'Qt6Core.dll', 'platforms\qwindows.dll', 'unins000.exe', 'LICENSE.txt', 'LGPL-3.0.txt', 'THIRD-PARTY-NOTICES.txt') {
+              if (-not (Test-Path (Join-Path $installed $file))) { throw "missing $file" }
+          }
+          foreach ($folder in 'Programs', 'Desktop') {
+              $link = Join-Path ([Environment]::GetFolderPath($folder)) 'Lyapunov.lnk'
+              if (-not (Test-Path $link)) { throw "missing $link" }
+          }
+          & "$installed\lyapunov.exe" doctor
+          if ($LASTEXITCODE) { throw 'doctor failed' }
+          # A card round trip with this runner's windows (Notepad), in a private folder.
+          $env:LYAPUNOV_DATA_DIR = Join-Path $env:RUNNER_TEMP 'cards'
+          $note = Start-Process notepad.exe -PassThru
+          Start-Sleep 3
+          & "$installed\lyapunov.exe" capture 'Windows check' --json
+          if ($LASTEXITCODE) { throw 'capture failed' }
+          & "$installed\lyapunov.exe" resume 'Windows check' --json
+          if ($LASTEXITCODE) { throw 'resume failed' }
+          Stop-Process -Id $note.Id -ErrorAction SilentlyContinue
+          # The uninstaller restarts itself from a temporary copy and returns at once.
+          Start-Process "$installed\unins000.exe" -Wait -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES'
+          for ($i = 0; $i -lt 60 -and (Test-Path "$installed\lyapunov.exe"); $i++) { Start-Sleep 1 }
+          if (Test-Path "$installed\lyapunov.exe") { throw 'uninstall left files' }
+          if (Test-Path (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Lyapunov.lnk')) { throw 'uninstall left the desktop shortcut' }
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: package-windows
+          path: dist/Lyapunov-Setup-x64.exe
+
+  # Each package is built in the distribution it targets, then installed in
+  # clean containers by linux-package-install.
+  linux-package:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { format: deb, image: 'debian:12' }
+          - { format: rpm, image: 'fedora:latest' }
+          - { format: arch, image: 'archlinux:latest' }
+    container: ${{ matrix.image }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: bash packaging/linux/build-package.sh ${{ matrix.format }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: package-${{ matrix.format }}
+          path: dist/*
+  linux-package-install:
+    needs: linux-package
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { format: deb, image: 'debian:12' }
+          - { format: deb, image: 'debian:stable' }
+          - { format: deb, image: 'ubuntu:24.04' }
+          - { format: deb, image: 'ubuntu:latest' }
+          - { format: rpm, image: 'fedora:latest' }
+          - { format: arch, image: 'archlinux:latest' }
+    container: ${{ matrix.image }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: package-${{ matrix.format }}
+          path: dist
+      - run: bash packaging/linux/test-package.sh $(ls dist/*.deb dist/*.rpm dist/*.pkg.tar.zst 2>/dev/null)
+  # The crates for offline builds from source: Fedora COPR and the Ubuntu PPA
+  # download this archive from the release.
+  vendor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+      - run: sh packaging/linux/vendor.sh
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: package-vendor
+          path: dist/lyapunov-*-vendor.tar.xz
+  # packaging/fedora/lyapunov.spec, as COPR builds it: from the sources, offline.
+  fedora-spec:
+    needs: vendor
+    runs-on: ubuntu-latest
+    container: fedora:latest
+    steps:
+      - run: dnf install -y git rpm-build dnf-plugins-core
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: package-vendor
+          path: dist
+      - run: |
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n1)
+          sed -i "s/^Version: .*/Version:        $version/" packaging/fedora/lyapunov.spec
+          mkdir -p ~/rpmbuild/SOURCES
+          git config --global --add safe.directory "$PWD"
+          git archive --prefix="Lyapunov-$version/" -o ~/rpmbuild/SOURCES/Lyapunov-$version.tar.gz HEAD
+          cp dist/lyapunov-*-vendor.tar.xz ~/rpmbuild/SOURCES/
+          dnf builddep -y packaging/fedora/lyapunov.spec
+          rpmbuild -bb packaging/fedora/lyapunov.spec
+          bash packaging/linux/test-package.sh ~/rpmbuild/RPMS/x86_64/lyapunov-$version-*.x86_64.rpm
+  # Built on the oldest supported base: an AppImage runs on newer systems only.
+  appimage:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: jurplel/install-qt-action@a9c63c7c123f3069cff414e7e482d95dfa9d8125 # v4
+        with:
+          version: '6.8.3'
+          cache: true
+      # Libraries the Qt xcb plugin loads; linuxdeploy bundles them from here.
+      - run: >-
+          sudo apt-get update && sudo apt-get install -y libgl1-mesa-dev libxkbcommon-x11-0
+          libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-render-util0 libxcb-shape0 libxcb-xinerama0
+      - run: bash packaging/linux/build-appimage.sh
+      - run: |
+          QT_QPA_PLATFORM=offscreen dist/Lyapunov-x86_64.AppImage --appimage-extract-and-run --smoke-test
+          cd "$(mktemp -d)" && "$GITHUB_WORKSPACE/dist/Lyapunov-x86_64.AppImage" --appimage-extract >/dev/null
+          squashfs-root/usr/bin/lyapunov --version
+          for file in LICENSE LGPL-3.0.txt THIRD-PARTY-NOTICES.txt; do
+            test -s "squashfs-root/usr/share/licenses/lyapunov/$file"
+          done
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: package-appimage
+          path: dist/Lyapunov-x86_64.AppImage
+
+  # Only this job may write, and it runs no build code: it publishes the
+  # packages that the jobs above built and tested.
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [rust, desktop-windows, linux-package-install, appimage, vendor, fedora-spec, sessions]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: package-*
+          merge-multiple: true
+          path: dist
+      - env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        # SHA256SUMS lets users check a download (docs/VERIFYING.md).
+        run: |
+          (cd dist && sha256sum -- * >SHA256SUMS)
+          gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes
+      # Fedora COPR rebuilds from the release just published (.copr/Makefile),
+      # once its webhook is configured.
+      - env:
+          COPR_WEBHOOK: ${{ secrets.COPR_WEBHOOK }}
+        run: |
+          if [ -n "$COPR_WEBHOOK" ]; then curl -fsS -X POST "$COPR_WEBHOOK"; else echo "COPR not set up yet"; fi
+
+  # The Ubuntu PPA and the AUR follow each release once they are set up
+  # (repository variables PUBLISH_PPA and PUBLISH_AUR set to true).
+  ppa:
+    needs: release
+    if: vars.PUBLISH_PPA == 'true'
+    runs-on: ubuntu-latest
+    container: ubuntu:24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - env:
+          PPA_SIGNING_KEY: ${{ secrets.PPA_SIGNING_KEY }}
+          TAG: ${{ github.ref_name }}
+        run: bash packaging/debian/ppa.sh "${TAG#v}"
+  aur:
+    needs: release
+    if: vars.PUBLISH_AUR == 'true'
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - env:
+          AUR_SSH_KEY: ${{ secrets.AUR_SSH_KEY }}
+          TAG: ${{ github.ref_name }}
+        run: bash packaging/arch/aur.sh "${TAG#v}"
+
+  installer:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ['debian:stable', 'ubuntu:24.04', 'fedora:latest', 'archlinux:latest', 'opensuse/tumbleweed:latest']
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: ./scripts/test-install-container.sh ${{ matrix.image }}

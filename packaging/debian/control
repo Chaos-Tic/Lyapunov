@@ -1,0 +1,25 @@
+Source: lyapunov
+Section: utils
+Priority: optional
+Maintainer: Chaos-Tic <58691435+Chaos-Tic@users.noreply.github.com>
+Build-Depends: debhelper-compat (= 13),
+               cmake,
+               qt6-base-dev,
+               @RUST@
+Standards-Version: 4.7.2
+Homepage: https://github.com/Chaos-Tic/Lyapunov
+Vcs-Browser: https://github.com/Chaos-Tic/Lyapunov
+Vcs-Git: https://github.com/Chaos-Tic/Lyapunov.git
+Rules-Requires-Root: no
+
+Package: lyapunov
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, qt6-qpa-plugins
+Recommends: xdg-utils,
+            qt6-wayland
+Description: Save an activity as a card and resume it later
+ Lyapunov keeps each activity as a card: the applications, windows, folders
+ and documents that belong to it. Resuming a card reopens what is missing and
+ puts windows back where they were, on KDE Plasma, GNOME (with the included
+ Shell extension), X11 window managers, sway, i3 and Hyprland. Everything
+ stays on this computer.

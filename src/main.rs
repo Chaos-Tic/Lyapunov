@@ -856,7 +856,10 @@ fn run(command: Command) -> Result<()> {
                     }
                 }
             }
+            #[cfg(unix)]
             let running = backend::gnome::Gnome::available();
+            #[cfg(not(unix))]
+            let running = false;
             let out = serde_json::json!({
                 "uuid": integrate::GNOME_UUID,
                 "installed": installed,
