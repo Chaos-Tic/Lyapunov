@@ -27,6 +27,14 @@ xfwm4)
     x_session
     xfwm4 --compositor=off >/tmp/wm.log 2>&1 &
     export LYAPUNOV_BACKEND=x11 LYA_SECOND_DESKTOP=1
+    # Xfwm4 may start after the fixed one-second delay, especially in CI.
+    # Wait for its EWMH announcement before Lyapunov probes the session.
+    for _ in $(seq 100); do
+        if xprop -root _NET_SUPPORTING_WM_CHECK 2>/dev/null | grep -Eq '= window id # 0x[1-9a-fA-F][0-9a-fA-F]*'; then
+            break
+        fi
+        sleep 0.1
+    done
     ;;
 i3)
     x_session

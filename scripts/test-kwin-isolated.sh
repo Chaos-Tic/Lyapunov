@@ -28,8 +28,10 @@ for _ in $(seq 100); do
     "$qdbus" org.kde.KWin /VirtualDesktopManager org.kde.KWin.VirtualDesktopManager.createDesktop 1 Second >/dev/null 2>&1 && break
     sleep 0.1
 done
-second=$("$qdbus" --literal org.kde.KWin /VirtualDesktopManager org.freedesktop.DBus.Properties.Get \
-    org.kde.KWin.VirtualDesktopManager desktops | grep -o '[0-9a-f]\{8\}-[0-9a-f-]\{27\}' | sed -n 2p)
+second=$(gdbus call --session --dest org.kde.KWin --object-path /VirtualDesktopManager \
+    --method org.freedesktop.DBus.Properties.Get org.kde.KWin.VirtualDesktopManager desktops \
+    | grep -oE '[0-9a-f]{8}-[0-9a-f-]{27}' | sed -n 2p)
+[[ -n "$second" ]] || { echo "KWin did not expose a second desktop" >&2; exit 1; }
 LYAPUNOV=$PWD/target/release/lyapunov LYA_TEST_CMD=foot LYA_TEST_ID=foot.desktop \
     LYA_SECOND_DESKTOP=$second LYA_EVIDENCE=$run/evidence python3 tests/e2e/session_check.py
 echo "Evidence: $run/evidence"
