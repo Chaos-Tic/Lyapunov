@@ -1,12 +1,17 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 — 2026-10-20
 
 - The window checks GitHub once a day for a newer release and shows how to
   update for the way Lyapunov was installed (package manager, winget, AppImage,
   source). One anonymous request; turn it off in the menu.
 - New icon in the Liquid Glass family of Lorenz: an open card between two bands,
   with its Resume button. Card emblems and the README banner follow it.
+- Standard `cmake --install` rules install the core, the window, the launcher,
+  the icons, the license and the GNOME extension; every package uses them.
+- The GNOME extension also refuses a caller running under a debugger.
+- `TRADEMARKS.md` and `CONTRIBUTING.md` state how the name and logo may be used
+  and how to contribute.
 
 ## 0.1.0 — 2026-10-20
 

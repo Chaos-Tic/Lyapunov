@@ -37,8 +37,9 @@ Everything runs on your computer. No account, no telemetry; the only network use
 once-a-day check for a new version on GitHub, which you can turn off.
 Cards are small JSON files in a private folder.
 
-**Version 0.1.0.** Install it [from source](#install) or use a package attached
-to the [first release](https://github.com/Chaos-Tic/Lyapunov/releases/tag/v0.1.0).
+**Version 0.2.0.** Install it with your package manager, [from source](#install), or
+from the [latest release](https://github.com/Chaos-Tic/Lyapunov/releases/latest);
+Lyapunov tells you when a newer version is out.
 Package-manager channels are listed in [Packaging](packaging/README.md) as
 they become available. What is verified and what is not is listed in
 [Compatibility](#compatibility).
@@ -130,7 +131,7 @@ For packages that receive updates through the system package manager:
 | Arch Linux | Build and install [`lyapunov` from the AUR](https://aur.archlinux.org/packages/lyapunov) |
 
 The Windows installer and standalone Linux files are on the
-[v0.1.0 release page](https://github.com/Chaos-Tic/Lyapunov/releases/tag/v0.1.0).
+[latest release page](https://github.com/Chaos-Tic/Lyapunov/releases/latest).
 
 ## Compatibility
 
@@ -214,4 +215,9 @@ and the animation above are generated from demo data by
 
 ## License
 
-GNU General Public License v3.0 or later. See [LICENSE](LICENSE).
+Copyright (c) 2026 Chaos-Tic. Lyapunov is free software under the GNU General
+Public License v3.0 or later ([LICENSE](LICENSE)): anyone who redistributes it,
+modified or not, must keep this notice and publish the source under the same
+license. The name and the logo identify the official project and may not be
+used for a fork ([TRADEMARKS.md](TRADEMARKS.md)). Issues are welcome; see
+[CONTRIBUTING.md](CONTRIBUTING.md).

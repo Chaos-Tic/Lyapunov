@@ -1,9 +1,9 @@
 ﻿; Lyapunov installer for Windows (Inno Setup 6). CI builds it with:
-;   iscc /DAppVersion=0.1.0 packaging\windows\lyapunov.iss
+;   iscc /DAppVersion=0.2.0 packaging\windows\lyapunov.iss
 ; dist\Lyapunov (SourceDir) holds lyapunov.exe, lyapunov-desktop.exe and the Qt files from windeployqt.
 ; Silent install for scripts: Lyapunov-Setup-x64.exe /VERYSILENT /TASKS="desktopicon"
 #ifndef AppVersion
-  #define AppVersion "0.1.0"
+  #define AppVersion "0.2.0"
 #endif
 #ifndef SourceDir
   #define SourceDir "..\..\dist\Lyapunov"
