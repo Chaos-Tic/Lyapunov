@@ -1,0 +1,7 @@
+# GNOME Shell for scripts/test-gnome-container.sh: a headless Shell with the
+# Lyapunov extension, on a virtual monitor.
+FROM fedora:latest
+RUN dnf install -y --setopt=install_weak_deps=False \
+        gnome-shell mutter gnome-text-editor dbus-daemon python3 python3-dbusmock procps-ng \
+        mesa-dri-drivers glib2 xdg-utils dejavu-sans-fonts \
+    && dnf clean all

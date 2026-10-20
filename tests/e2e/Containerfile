@@ -1,0 +1,7 @@
+# Window managers for scripts/test-sessions-container.sh: each runs on a
+# virtual screen (Xvfb, or sway's headless backend) inside the container.
+FROM archlinux:latest
+RUN pacman -Syu --noconfirm --needed \
+        xorg-server-xvfb xorg-xprop openbox xfwm4 xfconf i3-wm sway foot xterm \
+        python dbus ttf-dejavu procps-ng \
+    && pacman -Scc --noconfirm

@@ -1,0 +1,8 @@
+{
+  "uuid": "lyapunov@chaos-tic.github.io",
+  "name": "Lyapunov",
+  "description": "Lets the Lyapunov app see and arrange your windows, so it can capture and resume your work spaces. Nothing leaves your computer.",
+  "shell-version": ["45", "46", "47", "48", "49", "50"],
+  "url": "https://github.com/Chaos-Tic/Lyapunov",
+  "version": 1
+}
