@@ -28,7 +28,7 @@ done
 grep -q '^Exec="/usr/bin/lyapunov-desktop"$' /usr/share/applications/lyapunov.desktop
 # The packaged core is owned by root and writable by nobody else: the GNOME
 # extension answers it without a trust file.
-[ "$(stat -c %u /usr/bin/lyapunov)" = 0 ] && [ "$(( $(stat -c %a /usr/bin/lyapunov) & 022 ))" = 0 ]
+[ "$(stat -c %u /usr/bin/lyapunov)" = 0 ] && [ "$(( 8#$(stat -c %a /usr/bin/lyapunov) & 8#022 ))" = 0 ]
 # A card round trip in a private data folder.
 export LYAPUNOV_DATA_DIR=$(mktemp -d) LYAPUNOV_BACKEND=launch-only
 lyapunov capture "Package check" --json >/dev/null

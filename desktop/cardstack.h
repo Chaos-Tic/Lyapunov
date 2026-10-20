@@ -109,6 +109,9 @@ protected:
     glass::Spring scroll;
     int current = 0, hoverButton = 0; // 1 resume, 2 more, 3 empty capture
     bool pressedResume = false, keyboard = false;
+public:
+    bool rendering = false;
+protected:
     QTimer frames;
     QElapsedTimer clock;
     QPointF dragStart{-1, -1};
@@ -162,15 +165,19 @@ protected:
         // Keep the active card in view, with up to two bands above it.
         const qreal wanted = activeTop - qMin(current, 2) * band;
         scroll.target = qBound(0.0, wanted, qMax(0.0, total - view));
-        const bool still = snap || glass::reducedMotion() || !isVisible();
+        const bool still = snap || glass::reducedMotion() || (!isVisible() && !rendering);
         if (still) {
             for (Motion &m : motion) { m.top.snap(m.top.target); m.height.snap(m.height.target); m.inset.snap(m.inset.target); m.glow.snap(m.glow.target); }
             scroll.snap(scroll.target);
         } else if (!frames.isActive()) { clock.restart(); frames.start(); }
     }
 
-    void tick() {
-        const qreal dt = qMin(qreal(clock.restart()), 40.0) / 1000.0;
+    void tick() { advance(qMin(qreal(clock.restart()), 40.0) / 1000.0); }
+
+public:
+    // Moves the springs by dt seconds; false once everything is at rest.
+    // Documentation renders call it with a fixed step for even frames.
+    bool advance(qreal dt) {
         bool moving = scroll.step(dt, 300, 34);
         for (Motion &m : motion) {
             moving |= m.top.step(dt, 320, 34);
@@ -180,7 +187,16 @@ protected:
         }
         update();
         if (!moving) frames.stop();
+        return moving;
     }
+    // Animated selection even where the window is not shown (renders).
+    void selectAnimated(int i) {
+        if (cards.isEmpty()) return;
+        current = qBound(0, i, int(cards.size()) - 1);
+        relayout(false); frames.stop(); announce(); update();
+    }
+
+protected:
 
     void resizeEvent(QResizeEvent *) override { relayout(true); }
 

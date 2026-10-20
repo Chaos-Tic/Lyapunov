@@ -103,7 +103,7 @@ note "Session: ${XDG_SESSION_TYPE:-unknown} · desktop: ${XDG_CURRENT_DESKTOP:-u
 # ---------------------------------------------------------------------------
 rust_ok() {
     command -v cargo >/dev/null && command -v rustc >/dev/null || return 1
-    local version; version=$(rustc --version | awk '{print $2}')
+    local version; version=$(rustc --version); version=${version#rustc }; version=${version%% *}
     # Edition 2024 requires Rust 1.85 or newer.
     [[ "$(printf '%s\n1.85.0\n' "$version" | sort -V | head -n1)" == 1.85.0 ]]
 }

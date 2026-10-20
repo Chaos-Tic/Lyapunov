@@ -8,10 +8,11 @@ image=${1:?usage: scripts/test-install-container.sh IMAGE}
 engine=$(command -v docker || command -v podman) || { echo "Docker or Podman is required" >&2; exit 2; }
 "$engine" run --rm -v "$PWD:/src:ro" "$image" bash -c '
 set -e
+# sudo and runuser (util-linux) are missing from minimal images.
 if command -v apt-get >/dev/null; then apt-get update -qq && apt-get install -y -qq sudo >/dev/null
-elif command -v pacman >/dev/null; then pacman -Sy --noconfirm --needed sudo >/dev/null
-elif command -v dnf >/dev/null; then dnf install -y -q sudo >/dev/null
-elif command -v zypper >/dev/null; then zypper --non-interactive install sudo >/dev/null
+elif command -v pacman >/dev/null; then pacman -Sy --noconfirm --needed sudo util-linux >/dev/null
+elif command -v dnf >/dev/null; then dnf install -y -q sudo util-linux shadow-utils >/dev/null
+elif command -v zypper >/dev/null; then zypper --non-interactive install sudo util-linux shadow >/dev/null
 fi
 useradd -m tester && echo "tester ALL=(ALL) NOPASSWD: ALL" >/etc/sudoers.d/tester
 cp -r /src /home/tester/lyapunov && rm -rf /home/tester/lyapunov/{target,build,dist} && chown -R tester /home/tester/lyapunov

@@ -125,6 +125,23 @@ public:
         return ok;
     }
 
+    // Frames of the stack moving from card to card, at 30 per second, for
+    // the README animation.
+    bool renderFrames(const QString &dir) {
+        QDir().mkpath(dir);
+        load(); stack->rendering = true;
+        int n = 0;
+        auto frame = [&] { QCoreApplication::processEvents(); return grab().save(QDir(dir).filePath(QString("%1.png").arg(n++, 4, 10, QChar('0')))); };
+        auto hold = [&](int count) { bool ok = true; for (int i = 0; i < count; ++i) ok &= frame(); return ok; };
+        bool ok = hold(24);
+        for (int target : {1, 2, 3, 4, 2, 0}) {
+            stack->selectAnimated(target);
+            for (int i = 0; i < 90 && stack->advance(1.0 / 30); ++i) ok &= frame();
+            ok &= hold(target == 0 ? 30 : 20);
+        }
+        return ok;
+    }
+
 protected:
     QPushButton *capture, *noticeAction;
     QToolButton *menuButton;
@@ -339,7 +356,7 @@ protected:
         s->body->addWidget(places);
 
         s->addButton(L("Cancel"), false, [this] { closeSheet(); });
-        s->addButton(existing ? L("Replace the card") : L("Save card"), true, [=, this] {
+        s->addButton(existing ? L("Replace the card") : L("Save card"), true, [=] {
             if (name->text().trimmed().isEmpty()) {
                 error->setText(L("Give the card a name.")); error->show(); name->setFocus(); return;
             }
@@ -377,7 +394,7 @@ protected:
         auto *arrange = new QCheckBox(L("Move windows that are already open")); arrange->setChecked(c.arrange);
         s->body->addWidget(ask); s->body->addWidget(arrange);
         s->addButton(L("Cancel"), false, [this] { closeSheet(); });
-        s->addButton(L("Save"), true, [=, this] {
+        s->addButton(L("Save"), true, [=] {
             if (name->text().trimmed().isEmpty()) { error->setText(L("Give the card a name.")); error->show(); return; }
             QJsonObject draft{{"id", c.id}, {"name", name->text().trimmed()}, {"note", note->text().trimmed()}, {"tint", tint->value},
                 {"apps", c.raw["apps"]}, {"places", places->json()},
@@ -440,7 +457,7 @@ protected:
         s->body->addSpacing(4); s->body->addWidget(arrange);
         auto *error = label("", "muted"); error->hide(); s->body->addWidget(error);
         s->addButton(L("Cancel"), false, [this] { closeSheet(); });
-        s->addButton(L("Resume"), true, [=, this] {
+        s->addButton(L("Resume"), true, [=] {
             QStringList only; for (const auto &st : *steps) if (st.box->isChecked()) only << st.key;
             if (only.isEmpty()) { error->setText(L("Nothing selected.")); error->show(); return; }
             runResume(c, only, arrange->isChecked());
@@ -633,6 +650,10 @@ int main(int argc, char **argv) {
     if (args.contains("--smoke-test")) {
         Window w; w.resize(820, 760); w.load(); w.show(); QCoreApplication::processEvents();
         return w.grab().isNull() ? 1 : 0;
+    }
+    if (const int i = args.indexOf("--render-frames"); i >= 0) {
+        Window w; w.resize(880, 780); w.show(); QCoreApplication::processEvents();
+        return w.renderFrames(args.value(i + 1, "frames")) ? 0 : 1;
     }
     if (const int i = args.indexOf("--render"); i >= 0) {
         Window w; w.resize(880, 780); w.show(); QCoreApplication::processEvents();
