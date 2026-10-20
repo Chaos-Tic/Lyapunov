@@ -33,7 +33,8 @@ window; other applications are recognised by app identity only. Before anything 
 Lyapunov shows what it will do; afterwards it says exactly what it did:
 *window found*, *application started* or *unavailable*.
 
-Everything runs on your computer. No account, no network, no telemetry.
+Everything runs on your computer. No account, no telemetry; the only network use is a
+once-a-day check for a new version on GitHub, which you can turn off.
 Cards are small JSON files in a private folder.
 
 **Version 0.1.0.** Install it [from source](#install) or use a package attached
@@ -169,7 +170,10 @@ come later through an optional extension.
 
 ## Privacy
 
-- Local only: no account, no server, no telemetry, no listening port.
+- Local only: no account, no server, no telemetry, no listening port. The window
+  asks GitHub once a day whether a newer release exists (one anonymous request,
+  nothing about you or your cards; **⋯ → Check for updates once a day** turns it
+  off) and then shows how to update with your package manager, winget or a download.
 - Cards keep application identities, window positions and the folders and
   documents you add. Window titles and URLs are never stored.
 - Deleting a card never touches the files or applications it lists.

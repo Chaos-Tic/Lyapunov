@@ -42,7 +42,7 @@ flowchart TD
 | [`src/backend/`](../src/backend/) | One file per desktop technology, and the detection that picks one |
 | [`src/integrate.rs`](../src/integrate.rs) | Menu entry, icons, GNOME extension installation and trust |
 | [`src/main.rs`](../src/main.rs) | The command line |
-| [`desktop/`](../desktop/) | The Qt interface: Liquid Glass painting, the card stack, sheets, translations |
+| [`desktop/`](../desktop/) | The Qt interface: Liquid Glass painting, the card stack, sheets, translations, the daily update check (`update.h`, the only network use) |
 | [`integrations/gnome-shell/`](../integrations/gnome-shell/) | The GNOME Shell extension |
 | [`tests/`](../tests/) | Card stack test, isolated session checks, demo data for screenshots |
 | [`packaging/`](../packaging/) | Packages for every platform (see its README) |

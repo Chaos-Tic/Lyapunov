@@ -4,6 +4,7 @@
 #include "cardstack.h"
 #include "core.h"
 #include "sheet.h"
+#include "update.h"
 
 // Lyapunov's window: the card stack over a soft environment, a header with
 // Capture and the menu, and sheets for capturing, editing and resuming.
@@ -76,6 +77,20 @@ public:
         noticeRow->hide();
         v->addWidget(noticeRow);
 
+        updateRow = new QWidget; auto *u = new QHBoxLayout(updateRow); u->setContentsMargins(4, 0, 4, 0);
+        updateNotice = label("", "muted"); auto *how = new QPushButton(L("How to update")); how->setObjectName("flat");
+        auto *later = new QPushButton(L("Later")); later->setObjectName("flat");
+        u->addWidget(updateNotice, 1); u->addWidget(how); u->addWidget(later);
+        updateRow->hide();
+        v->addWidget(updateRow);
+        connect(how, &QPushButton::clicked, this, [this] { showUpdate(); });
+        connect(later, &QPushButton::clicked, updateRow, &QWidget::hide);
+        checker.found = [this](const QString &version, const QString &page) {
+            latestVersion = version; latestPage = page;
+            updateNotice->setText(L("Lyapunov %1 is available (you have %2).").arg(version, LYAPUNOV_VERSION));
+            updateRow->show();
+        };
+
         stack = new CardStack;
         v->addWidget(stack, 1);
         stack->resumeRequested = [this](int i) { startResume(i); };
@@ -108,6 +123,27 @@ public:
     // Run from an AppImage: its folder changes at every start, so the GNOME
     // extension is told again which executable to answer, and the menu entry
     // is offered when there is none.
+    void checkUpdates(bool force = false) { checker.check(LYAPUNOV_VERSION, force); }
+
+    void showUpdate() {
+        const update::Method m = update::method();
+        Sheet *s = openSheet(L("Update Lyapunov"), 560);
+        s->body->addWidget(label(L("Version %1 is available. You have %2.").arg(latestVersion, LYAPUNOV_VERSION)));
+        s->body->addWidget(label(m.how, "hint"));
+        if (!m.command.isEmpty()) {
+            auto *cmd = label(m.command); cmd->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+            cmd->setTextInteractionFlags(Qt::TextSelectableByMouse); s->body->addWidget(cmd);
+            s->addButton(L("Copy the command"), false, [m] { QGuiApplication::clipboard()->setText(m.command); });
+        }
+        auto *keep = new QCheckBox(L("Check for updates once a day")); keep->setChecked(update::enabled());
+        connect(keep, &QCheckBox::toggled, this, [](bool on) { update::setEnabled(on); });
+        s->body->addWidget(keep);
+        const QString page = latestPage;
+        s->addButton(L("Open the release page"), m.download, [page] { QDesktopServices::openUrl(QUrl(page)); });
+        s->addButton(L("Close"), !m.download, [this] { closeSheet(); });
+        s->open();
+    }
+
     void appImageSetUp() {
         if (!qEnvironmentVariableIsSet("APPIMAGE")) return;
         if (qEnvironmentVariable("XDG_CURRENT_DESKTOP").contains("GNOME", Qt::CaseInsensitive))
@@ -140,6 +176,8 @@ public:
         captureSheet(nullptr); ok &= shot("capture"); closeSheet();
         startResume(1); ok &= shot("plan");
         showReport(core::run({"report"}).obj()); ok &= shot("report"); closeSheet();
+        if (checker.found) checker.found("0.2.0", update::releasesPage);
+        showUpdate(); ok &= shot("update"); closeSheet(); updateRow->hide();
         stack->setCards({}); ok &= shot("empty");
         return ok;
     }
@@ -171,6 +209,10 @@ protected:
     QPixmap backdrop;
     bool backdropDark = false, styledDark = glass::theme().dark;
     QProcess *resuming = nullptr;
+    QWidget *updateRow;
+    QLabel *updateNotice;
+    update::Checker checker;
+    QString latestVersion, latestPage;
 
     static QIcon plusIcon() {
         QPixmap pm(32, 32); pm.fill(Qt::transparent);
@@ -277,6 +319,9 @@ protected:
                 lyapunov::settings().setValue(key, on); lyapunov::settings().sync(); update(); stack->update();
             });
         }
+        QAction *updates = m->addAction(L("Check for updates once a day")); updates->setCheckable(true);
+        updates->setChecked(update::enabled());
+        connect(updates, &QAction::toggled, this, [this](bool on) { update::setEnabled(on); if (on) checkUpdates(true); });
         m->addSeparator();
         m->addAction(L("Diagnostics"), this, [this] { showDiagnostics(); });
         m->addAction(L("About Lyapunov"), this, [this] { showAbout(); });
@@ -718,7 +763,7 @@ protected:
         auto *logo = new Logo; logo->setFixedSize(72, 72);
         s->body->addWidget(logo, 0, Qt::AlignLeft);
         s->body->addWidget(label(L("Save a card and pick it up later.")));
-        s->body->addWidget(label(L("Version %1. Everything stays on this computer: no account, no network.").arg(LYAPUNOV_VERSION), "hint"));
+        s->body->addWidget(label(L("Version %1. Everything stays on this computer: no account, no telemetry; only a daily check for updates, which you can turn off.").arg(LYAPUNOV_VERSION), "hint"));
         s->addButton(L("Close"), true, [this] { closeSheet(); });
         s->open();
     }
@@ -773,7 +818,7 @@ int main(int argc, char **argv) {
         });
     });
     QTimer::singleShot(0, &w, [&w, args] {
-        w.load(); w.diagnose(); w.appImageSetUp();
+        w.load(); w.diagnose(); w.appImageSetUp(); w.checkUpdates();
         if (args.contains("--capture")) w.startCapture();
     });
     return app.exec();

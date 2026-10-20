@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- The window checks GitHub once a day for a newer release and shows how to
+  update for the way Lyapunov was installed (package manager, winget, AppImage,
+  source). One anonymous request; turn it off in the menu.
 - New icon in the Liquid Glass family of Lorenz: an open card between two bands,
   with its Resume button. Card emblems and the README banner follow it.
 

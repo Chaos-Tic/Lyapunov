@@ -106,6 +106,15 @@ it. Window positions are kept; they are fitted to that computer's screens.
 *Reduce transparency*, the cards folder, diagnostics. Lyapunov also follows
 the system's colour scheme, and its animation preference on KDE and GNOME.
 
+## Updates
+
+Once a day, Lyapunov asks GitHub whether a newer version exists. When one does,
+a line under the title says so; **How to update** shows the command for the way
+you installed it (`yay -Syu lyapunov`, `sudo dnf upgrade lyapunov`,
+`sudo apt install --only-upgrade lyapunov`, `winget upgrade ChaosTic.Lyapunov`) or
+the release page for an AppImage or the Windows installer. Nothing is downloaded
+by itself. Turn the check off with **⋯ → Check for updates once a day**.
+
 ## Command line
 
 Everything is also available in a terminal; see `lyapunov --help`:

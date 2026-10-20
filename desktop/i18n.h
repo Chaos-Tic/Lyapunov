@@ -125,8 +125,20 @@ inline QString L(const QString &english) {
         {"Lyapunov cards (*.json)", "Cartes Lyapunov (*.json)"}, {"Exported to %1", "Exporté vers %1"},
         {"Save a card and pick it up later.", "Enregistrez une activité, reprenez-la plus tard."},
         {"Add Lyapunov to the applications menu?", "Ajouter Lyapunov au menu des applications ?"}, {"Add", "Ajouter"},
-        {"Version %1. Everything stays on this computer: no account, no network.",
-         "Version %1. Tout reste sur cet ordinateur : aucun compte, aucun réseau."},
+        // Updates
+        {"How to update", "Comment mettre à jour"}, {"Later", "Plus tard"}, {"Update Lyapunov", "Mettre à jour Lyapunov"},
+        {"Lyapunov %1 is available (you have %2).", "Lyapunov %1 est disponible (vous avez la %2)."},
+        {"Version %1 is available. You have %2.", "La version %1 est disponible. Vous avez la %2."},
+        {"Copy the command", "Copier la commande"}, {"Open the release page", "Ouvrir la page de la version"},
+        {"Check for updates once a day", "Vérifier les mises à jour une fois par jour"},
+        {"Update with your package manager.", "Mettez à jour avec votre gestionnaire de paquets."},
+        {"Download the new AppImage and replace this one.", "Téléchargez la nouvelle AppImage et remplacez celle-ci."},
+        {"Update with winget, or download the new installer.", "Mettez à jour avec winget, ou téléchargez le nouvel installateur."},
+        {"Lyapunov was built from source: update the checkout and install it again.",
+         "Lyapunov a été compilé depuis les sources : mettez à jour le dépôt et réinstallez-le."},
+        {"Download the new version from GitHub.", "Téléchargez la nouvelle version sur GitHub."},
+        {"Version %1. Everything stays on this computer: no account, no telemetry; only a daily check for updates, which you can turn off.",
+         "Version %1. Tout reste sur cet ordinateur : aucun compte, aucune télémétrie ; seulement une vérification quotidienne des mises à jour, désactivable."},
     };
     return fr.value(english, english);
 }

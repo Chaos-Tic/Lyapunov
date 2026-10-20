@@ -12,7 +12,9 @@ obtain.
 
 ## What Lyapunov never does
 
-- Connect to a network, listen on a port, send telemetry, or require an account.
+- Listen on a port, send telemetry, or require an account. The core (`lyapunov`)
+  and the GNOME extension never use the network; see *Update check* for the
+  window's only request.
 - Store window titles, URLs, passwords, tokens or environment variables in a card.
 - Run a shell. Applications start from their desktop entry's `Exec` line, split
   without a shell, or from an executable path with no arguments. The optional
@@ -75,6 +77,15 @@ directory is private (0700) and the records are private (0600). No listener
 or network connection is created. Remote and multi-root workspaces are not
 reported. A failed launch leaves a guard in the runtime directory so another
 resume cannot silently open a duplicate window; a verified project clears it.
+
+## Update check
+
+At most once a day, the window makes one anonymous HTTPS request to
+`api.github.com/repos/Chaos-Tic/Lyapunov/releases/latest`. It sends no identifier,
+cookie, card, path or window information; GitHub sees the address of the request,
+as with any download. When a newer release exists, the window shows how to update
+(package manager, winget, or the release page). Nothing is downloaded or run
+automatically. Turn it off with **⋯ → Check for updates once a day**.
 
 ## Files
 
