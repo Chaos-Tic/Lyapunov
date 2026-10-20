@@ -130,6 +130,36 @@ pub fn install_gnome_extension(data: &Path) -> Result<PathBuf> {
     }
 }
 
+/// Records this executable as one the GNOME extension may answer, in the
+/// user's private configuration (packaged executables owned by root need not
+/// be listed). Returns the file written.
+pub fn trust_for_gnome(exe: &Path) -> Result<PathBuf> {
+    let config = match std::env::var_os("XDG_CONFIG_HOME")
+        .filter(|v| !v.is_empty())
+        .map(PathBuf::from)
+    {
+        Some(d) if d.is_absolute() => d,
+        _ => PathBuf::from(std::env::var_os("HOME").context("HOME is not set")?).join(".config"),
+    };
+    let dir = config.join("lyapunov");
+    fs::create_dir_all(&dir)?;
+    let file = dir.join("gnome-trusted");
+    let exe = exe.to_string_lossy().into_owned();
+    let mut lines: Vec<String> = fs::read_to_string(&file)
+        .unwrap_or_default()
+        .lines()
+        .map(str::trim)
+        .filter(|l| l.starts_with('/') && Path::new(l).exists())
+        .map(str::to_string)
+        .collect();
+    if !lines.contains(&exe) {
+        lines.push(exe);
+    }
+    let keep = lines.len().saturating_sub(8);
+    crate::store::atomic_write(&file, (lines[keep..].join("\n") + "\n").as_bytes())?;
+    Ok(file)
+}
+
 /// Writes the extension into a package's data folder.
 pub fn stage_gnome_extension(data: &Path) -> Result<PathBuf> {
     let dir = data.join("gnome-shell/extensions").join(GNOME_UUID);

@@ -837,6 +837,8 @@ fn run(command: Command) -> Result<()> {
             let mut note = None;
             if !status {
                 installed = Some(integrate::install_gnome_extension(&data)?);
+                let me = std::fs::canonicalize(std::env::current_exe()?)?;
+                integrate::trust_for_gnome(&me)?;
                 match lyapunov::apps::find_program("gnome-extensions") {
                     Some(tool) => {
                         let out = std::process::Command::new(tool)

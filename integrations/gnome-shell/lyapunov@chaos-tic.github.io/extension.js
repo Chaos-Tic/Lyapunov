@@ -8,7 +8,9 @@
 // capture preview only. Nothing is stored and nothing leaves the computer.
 //
 // Only the Lyapunov executable may call it: the caller's process is looked up
-// on the bus, and any other program receives an access-denied error.
+// on the bus, and must run a lyapunov binary installed by a package or
+// trusted by the user (`lyapunov gnome-extension`). Any other program
+// receives an access-denied error.
 
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
@@ -26,15 +28,36 @@ const INTERFACE = `<node>
   </interface>
 </node>`;
 
-// The executable behind a bus caller must be Lyapunov's core.
+// Lyapunov executables the user trusted with `lyapunov gnome-extension`
+// (installs outside the system folders: AppImage, ~/.local).
+function trustedPaths() {
+    try {
+        const file = GLib.build_filenamev([GLib.get_user_config_dir(), 'lyapunov', 'gnome-trusted']);
+        const [, bytes] = GLib.file_get_contents(file);
+        return new TextDecoder().decode(bytes).split('\n').map(l => l.trim()).filter(l => l.startsWith('/'));
+    } catch (e) {
+        return [];
+    }
+}
+
+// Installed by a package: owned by root, writable by nobody else.
+function systemInstalled(path) {
+    const info = Gio.File.new_for_path(path).query_info('unix::uid,unix::mode', Gio.FileQueryInfoFlags.NONE, null);
+    return info.get_attribute_uint32('unix::uid') === 0 && (info.get_attribute_uint32('unix::mode') & 0o022) === 0;
+}
+
+// The executable behind a bus caller must be Lyapunov's core, installed by a
+// package or trusted by the user. A deleted or renamed binary is refused.
 function callerIsLyapunov(invocation) {
     try {
         const reply = invocation.get_connection().call_sync('org.freedesktop.DBus', '/org/freedesktop/DBus',
             'org.freedesktop.DBus', 'GetConnectionUnixProcessID', new GLib.Variant('(s)', [invocation.get_sender()]),
             new GLib.VariantType('(u)'), Gio.DBusCallFlags.NONE, 1000, null);
         const [pid] = reply.deepUnpack();
-        const exe = GLib.file_read_link(`/proc/${pid}/exe`).replace(/ \(deleted\)$/, '');
-        return GLib.path_get_basename(exe) === 'lyapunov';
+        const exe = GLib.file_read_link(`/proc/${pid}/exe`);
+        if (exe.endsWith(' (deleted)') || GLib.path_get_basename(exe) !== 'lyapunov')
+            return false;
+        return systemInstalled(exe) || trustedPaths().includes(exe);
     } catch (e) {
         return false;
     }
