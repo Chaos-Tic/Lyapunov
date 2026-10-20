@@ -23,7 +23,11 @@ trap 'kill $kwin 2>/dev/null; wait $kwin 2>/dev/null || true' EXIT
 qdbus=$(command -v qdbus6 || command -v qdbus)
 for _ in $(seq 100); do "$qdbus" org.kde.KWin /KWin >/dev/null 2>&1 && break; sleep 0.1; done
 export WAYLAND_DISPLAY=lyapunov-test
-"$qdbus" org.kde.KWin /VirtualDesktopManager org.kde.KWin.VirtualDesktopManager.createDesktop 1 Second >/dev/null
+# KWin registers its objects one after the other: wait for the desktops.
+for _ in $(seq 100); do
+    "$qdbus" org.kde.KWin /VirtualDesktopManager org.kde.KWin.VirtualDesktopManager.createDesktop 1 Second >/dev/null 2>&1 && break
+    sleep 0.1
+done
 second=$("$qdbus" --literal org.kde.KWin /VirtualDesktopManager org.freedesktop.DBus.Properties.Get \
     org.kde.KWin.VirtualDesktopManager desktops | grep -o '[0-9a-f]\{8\}-[0-9a-f-]\{27\}' | sed -n 2p)
 LYAPUNOV=$PWD/target/release/lyapunov LYA_TEST_CMD=foot LYA_TEST_ID=foot.desktop \

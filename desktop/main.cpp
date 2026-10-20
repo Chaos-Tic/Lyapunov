@@ -519,6 +519,7 @@ protected:
         s->open();
         const QString exe = core::path();
         if (exe.isEmpty()) { fail("core-missing"); return; }
+        resuming->setProcessEnvironment(core::environment());
         resuming->start(exe, args);
     }
 

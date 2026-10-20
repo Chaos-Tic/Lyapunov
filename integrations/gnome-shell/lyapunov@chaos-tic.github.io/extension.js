@@ -40,10 +40,26 @@ function trustedPaths() {
     }
 }
 
-// Installed by a package: owned by root, writable by nobody else.
-function systemInstalled(path) {
+// Owned by root and writable by nobody else.
+function rootOnly(path) {
     const info = Gio.File.new_for_path(path).query_info('unix::uid,unix::mode', Gio.FileQueryInfoFlags.NONE, null);
     return info.get_attribute_uint32('unix::uid') === 0 && (info.get_attribute_uint32('unix::mode') & 0o022) === 0;
+}
+
+// Installed by a package: the executable and its folder belong to root.
+function systemInstalled(path) {
+    return rootOnly(path) && rootOnly(GLib.path_get_dirname(path));
+}
+
+// A process started with libraries injected is not the executable it names.
+function injected(pid) {
+    try {
+        const [, bytes] = GLib.file_get_contents(`/proc/${pid}/environ`);
+        return new TextDecoder().decode(bytes).split('\0')
+            .some(v => v.startsWith('LD_PRELOAD=') || v.startsWith('LD_LIBRARY_PATH=') || v.startsWith('LD_AUDIT='));
+    } catch (e) {
+        return true;
+    }
 }
 
 // The executable behind a bus caller must be Lyapunov's core, installed by a
@@ -55,7 +71,7 @@ function callerIsLyapunov(invocation) {
             new GLib.VariantType('(u)'), Gio.DBusCallFlags.NONE, 1000, null);
         const [pid] = reply.deepUnpack();
         const exe = GLib.file_read_link(`/proc/${pid}/exe`);
-        if (exe.endsWith(' (deleted)') || GLib.path_get_basename(exe) !== 'lyapunov')
+        if (exe.endsWith(' (deleted)') || GLib.path_get_basename(exe) !== 'lyapunov' || injected(pid))
             return false;
         return systemInstalled(exe) || trustedPaths().includes(exe);
     } catch (e) {

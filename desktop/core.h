@@ -18,6 +18,14 @@ inline QString path() {
     return QStandardPaths::findExecutable(name);
 }
 
+// The core needs no injected libraries (an AppImage may set some), and the
+// GNOME extension refuses a caller that has them.
+inline QProcessEnvironment environment() {
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    for (const char *name : {"LD_PRELOAD", "LD_LIBRARY_PATH", "LD_AUDIT"}) env.remove(name);
+    return env;
+}
+
 struct Result {
     QJsonDocument doc;
     QString error;
@@ -48,6 +56,7 @@ inline Result run(const QStringList &args, const QByteArray &input = {}, int tim
     const QString exe = path();
     if (exe.isEmpty()) return {{}, "core-missing"};
     QProcess p;
+    p.setProcessEnvironment(environment());
     p.start(exe, QStringList(args) << "--json");
     if (!p.waitForStarted(5000)) return {{}, "core-missing"};
     if (!input.isEmpty()) p.write(input);
