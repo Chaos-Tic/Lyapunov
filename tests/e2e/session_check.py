@@ -128,7 +128,7 @@ def set_slot(**fields):
 
 
 set_slot(rect=target, state="normal", floating=True)
-report = run("resume", cid, "--timeout", "15")
+report = run("resume", cid, "--arrange", "--timeout", "15")
 record("resume-open", report)
 o = report["outcomes"][0]
 ok(o["status"] == "window-found" and o["placed"] == 1, f"resume finds the open window and places it ({o})")
@@ -142,7 +142,7 @@ target2 = {"x": area["x"] + 140, "y": area["y"] + 95, "width": 480, "height": 30
 set_slot(rect=target2)
 plan = run("plan", cid)
 ok(plan["steps"][0]["kind"] == "launch", "the plan starts a closed application")
-report = run("resume", cid, "--timeout", "20")
+report = run("resume", cid, "--arrange", "--timeout", "20")
 record("resume-launch", report)
 o = report["outcomes"][0]
 ok(o["status"] == "app-launched" and o["placed"] == 1, f"resume starts the application and places its window ({o})")
@@ -151,7 +151,7 @@ ok(close(w["rect"], target2), f"the started window is in place ({w['rect']} vs {
 
 ghost = {"x": area["x"] + area["width"] + 4000, "y": 300, "width": 600, "height": 400}
 set_slot(rect=ghost, output="GHOST-9", output_rect={"x": ghost["x"] - 100, "y": 0, "width": 1920, "height": 1080})
-report = run("resume", cid)
+report = run("resume", cid, "--arrange")
 record("resume-missing-screen", report)
 w = windows_now()[0]
 r = w["rect"]
@@ -166,7 +166,7 @@ if caps["desktops"] and not caps["tiling"]:
     if second:
         set_slot(rect=target, output=slot.get("output"), output_rect=slot.get("output_rect"),
                  desktop={"id": second, "name": "Second", "index": 1})
-        report = run("resume", cid)
+        report = run("resume", cid, "--arrange")
         record("resume-desktop", report)
         snap_scan = run("scan")
         d = our_app(snap_scan)["app"]["windows"][0].get("desktop", {})
@@ -174,12 +174,12 @@ if caps["desktops"] and not caps["tiling"]:
 
 if caps["states"] and backend not in ("sway", "i3", "hyprland"):
     set_slot(rect=target, state="maximized", desktop=slot.get("desktop"))
-    report = run("resume", cid)
+    report = run("resume", cid, "--arrange")
     record("resume-maximized", report)
     st = wait_for(lambda: windows_now()[0]["state"] == "maximized" and "maximized", timeout=5, what="maximized state")
     ok(st == "maximized", "the window is maximized again")
     set_slot(rect=target, state="normal")
-    run("resume", cid)
+    run("resume", cid, "--arrange")
     w = wait_for(lambda: [x for x in windows_now() if x["state"] == "normal"], timeout=5, what="normal state")[0]
     ok(close(w["rect"], target), f"un-maximized, the window returns to its saved place ({w['rect']})")
 
