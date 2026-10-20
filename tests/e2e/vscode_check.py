@@ -60,17 +60,39 @@ with tempfile.TemporaryDirectory(prefix="lyapunov-vscode-") as tmp:
     def cleanup():
         # Every matched process belongs to this unique, disposable VS Code
         # profile. Never inspect or signal the user's normal VS Code process.
-        listing = subprocess.check_output(["ps", "-eo", "pid=,args="], text=True)
-        for line in listing.splitlines():
-            pid_text, _, args = line.strip().partition(" ")
-            if str(base / "user") not in args:
-                continue
-            pid = int(pid_text)
-            if pid != os.getpid():
+        def owned_pids():
+            listing = subprocess.check_output(["ps", "-eo", "pid=,stat=,comm=,args="], text=True)
+            result = []
+            for line in listing.splitlines():
+                parts = line.strip().split(None, 3)
+                if len(parts) != 4:
+                    continue
+                pid_text, state, command, args = parts
+                if not state.startswith("Z") and command in {"code-oss", "electron", "chrome_crashpad"} and str(base / "user") in args:
+                    result.append(int(pid_text))
+            return result
+
+        for pid in owned_pids():
+            try:
+                os.kill(pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+        deadline = time.monotonic() + 4
+        while time.monotonic() < deadline and owned_pids():
+            time.sleep(0.2)
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            remaining = owned_pids()
+            if not remaining:
+                break
+            for pid in remaining:
                 try:
-                    os.kill(pid, signal.SIGTERM)
+                    os.kill(pid, signal.SIGKILL)
                 except ProcessLookupError:
                     pass
+            time.sleep(0.2)
+        if owned_pids():
+            raise RuntimeError("disposable VS Code processes did not stop")
 
     try:
         subprocess.run([str(root / "scripts/install-vscode-extension.sh")], env=env, check=True,
