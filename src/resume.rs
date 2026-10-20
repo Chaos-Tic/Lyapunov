@@ -56,6 +56,7 @@ pub struct Plan {
     pub capabilities: Capabilities,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub limitation: Option<String>,
+    /// Saved desktop UI preference; CLI resume still requires --arrange.
     pub arrange_open_windows: bool,
     pub steps: Vec<Step>,
 }
@@ -122,11 +123,13 @@ pub struct Options {
 }
 
 impl Options {
-    pub fn for_card(card: &Card) -> Options {
+    pub fn for_card(_card: &Card) -> Options {
         Options {
             only: None,
             skip: Vec::new(),
-            arrange_open_windows: card.resume.arrange_open_windows,
+            // The CLI has no confirmation sheet. Only --arrange (or the
+            // desktop's reviewed plan) may move an already open window.
+            arrange_open_windows: false,
             timeout: Duration::from_secs(20),
         }
     }
@@ -856,11 +859,12 @@ mod tests {
     #[test]
     fn left_out_steps_and_open_windows_are_respected() {
         let mut f = fake();
-        let c = card();
+        let mut c = card();
+        c.resume.arrange_open_windows = true; // legacy card from before the safer default
         let mut o = Options::for_card(&c);
         assert!(
             !o.arrange_open_windows,
-            "a new card must not move an unrelated project's window"
+            "the CLI must not move an unrelated project's window from a saved preference"
         );
         o.skip = vec!["place:0".into()];
         let r = execute(&c, &o, &mut f, &AppIndex::default(), |_| {}).unwrap();

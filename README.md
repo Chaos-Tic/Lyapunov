@@ -158,6 +158,8 @@ lyapunov doctor                  # what this desktop allows
 
 Every command accepts `--json`. See `lyapunov --help` and
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+The command line leaves already open windows in place unless you pass
+`--arrange` explicitly.
 
 ## Building
 

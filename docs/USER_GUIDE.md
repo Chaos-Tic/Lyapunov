@@ -57,6 +57,10 @@ not yet know how to distinguish those projects or launch B beside A. Add the
 project folder to the card to open it explicitly, but check which application
 your desktop uses to open that folder.
 
+From the command line, `lyapunov resume CARD` also leaves open windows in
+place, including on older cards that saved the move option. Use `--arrange`
+only after checking which windows are open.
+
 ## Keep cards up to date
 
 **More** (or right-click a card, or the menu key) offers:
