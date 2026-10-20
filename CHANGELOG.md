@@ -12,5 +12,8 @@ First version.
 - A Liquid Glass card stack in English and French, light and dark, with
   keyboard navigation, reduced motion and reduced transparency.
 - Command line with JSON output for every action; export and import.
+- Optional Linux VS Code project integration: one local folder per card,
+  separate A/B windows, verified reuse without a duplicate, and an isolated
+  end-to-end test.
 - Packages for Debian, Ubuntu, Fedora, Arch, an AppImage and a Windows
-  installer, all built and tested in CI.
+  installer, built and tested by the full CI workflow when it runs.

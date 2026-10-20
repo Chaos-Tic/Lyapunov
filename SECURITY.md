@@ -15,7 +15,9 @@ obtain.
 - Connect to a network, listen on a port, send telemetry, or require an account.
 - Store window titles, URLs, passwords, tokens or environment variables in a card.
 - Run a shell. Applications start from their desktop entry's `Exec` line, split
-  without a shell, or from an executable path with no arguments.
+  without a shell, or from an executable path with no arguments. The optional
+  VS Code adapter starts `code` with `--new-window` and one validated local
+  folder argument, also without a shell.
 - Close an application, or touch the files a card lists when the card is deleted.
 
 ## Cards from elsewhere
@@ -36,7 +38,8 @@ every card the same way, imported or not:
 - **No network locations.** `\\server\share`, `//server` and their verbatim
   forms are refused: opening one would contact that server and, on Windows,
   could send it the user's credentials.
-- **Preview first.** An import lists what each card would start and open
+- **Preview first.** An import lists what each card would start and open,
+  including VS Code project folder paths,
   before anything is saved, and an imported card always shows its plan before
   its first resume.
 
@@ -62,10 +65,22 @@ On KDE Plasma, Lyapunov loads a short script into KWin for each request and
 unloads it at once. The script is written to a private temporary folder; data
 from a card is embedded as JSON, never as code.
 
+## VS Code project extension
+
+The optional Linux extension reports one canonical local folder per VS Code
+window to files in the current user's runtime directory. It refreshes them
+every two seconds; each record contains only the folder path and extension
+host PID. Lyapunov accepts only a recent record from a live process. The
+directory is private (0700) and the records are private (0600). No listener
+or network connection is created. Remote and multi-root workspaces are not
+reported. A failed launch leaves a guard in the runtime directory so another
+resume cannot silently open a duplicate window; a verified project clears it.
+
 ## Files
 
 Cards live in a folder only the user can open (0700, files 0600), written
 atomically. A symbolic link in place of the cards folder is refused.
+VS Code project paths are stored in cards only when explicitly chosen.
 
 ## Limits
 
