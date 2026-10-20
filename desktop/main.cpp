@@ -176,7 +176,9 @@ public:
         captureSheet(nullptr); ok &= shot("capture"); closeSheet();
         startResume(1); ok &= shot("plan");
         showReport(core::run({"report"}).obj()); ok &= shot("report"); closeSheet();
-        if (checker.found) checker.found("0.2.0", update::releasesPage);
+        // A version just above this one, as a reader would see it.
+        const QList<int> v = update::parts(LYAPUNOV_VERSION);
+        if (checker.found) checker.found(QString("%1.%2.0").arg(v[0]).arg(v[1] + 1), update::releasesPage);
         showUpdate(); ok &= shot("update"); closeSheet(); updateRow->hide();
         stack->setCards({}); ok &= shot("empty");
         return ok;

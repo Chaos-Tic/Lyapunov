@@ -13,9 +13,9 @@ for look in light dark; do
 done
 LYAPUNOV_LANGUAGE=fr LYAPUNOV_THEME=light LYAPUNOV_REDUCED_MOTION=1 build/lyapunov-desktop --render "$work/fr"
 cp "$work/light/stack.png" "$out/stack-light.png"
-cp "$work/dark/stack.png" "$out/stack-dark.png"
 cp "$work/light/capture.png" "$out/capture.png"
-cp "$work/dark/plan.png" "$out/plan.png"
+cp "$work/light/plan.png" "$out/plan.png"
+cp "$work/light/update.png" "$out/update.png"
 cp "$work/light/report.png" "$out/report.png"
 cp "$work/fr/stack.png" "$out/stack-fr.png"
 LYAPUNOV_THEME=light build/lyapunov-desktop --render-frames "$work/frames"

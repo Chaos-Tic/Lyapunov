@@ -41,6 +41,9 @@ inline bool newer(const QString &candidate, const QString &current) {
 struct Method { QString how, command; bool download = false; };
 
 inline Method method(const QString &exeDir = QCoreApplication::applicationDirPath()) {
+    // Documentation captures show the common case: a distribution package.
+    if (qEnvironmentVariableIsSet("LYAPUNOV_DEMO_DIR"))
+        return {L("Update with your package manager."), "yay -Syu lyapunov", false};
     if (qEnvironmentVariableIsSet("APPIMAGE"))
         return {L("Download the new AppImage and replace this one."), {}, true};
 #ifdef Q_OS_WIN

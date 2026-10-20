@@ -51,7 +51,7 @@ they become available. What is verified and what is not is listed in
 <table>
 <tr>
 <td width="50%"><img src="docs/media/capture.png" alt="The Capture this space sheet: a name field, seven colour swatches with the chosen colour's name, the open applications with their window titles and a check box each, and buttons to add folders and documents."></td>
-<td width="50%"><img src="docs/media/plan.png" alt="In dark mode, the Resume Trip photos sheet warns that an open application's project is not verified, then lists darktable (will be started), Dolphin (open), Gwenview (unavailable) and two places to open, each with a check box."></td>
+<td width="50%"><img src="docs/media/plan.png" alt="The Resume Trip photos sheet warns that an open application's project is not verified, then lists darktable (will be started), Dolphin (open), Gwenview (unavailable) and two places to open, each with a check box."></td>
 </tr>
 <tr>
 <td><b>1. Capture.</b> Name the activity and pick a colour. Lyapunov lists the
@@ -65,15 +65,16 @@ identified or switched.</td>
 </tr>
 <tr>
 <td><img src="docs/media/report.png" alt="The report after resuming Trip photos: darktable started with 1 of 1 window placed, Dolphin window found with 1 of 2 windows placed and a note that 1 saved window was not reopened, Gwenview unavailable because it is not installed, and two places opened."></td>
-<td><img src="docs/media/stack-dark.png" alt="The card stack in dark mode, Trip photos open with its note, applications, places, the Resume this space button and a More button."></td>
+<td><img src="docs/media/update.png" alt="A line under the title says that a newer Lyapunov is available; the Update Lyapunov sheet shows the command for the way it was installed, a Copy the command button, the release page and a check box to keep checking once a day."></td>
 </tr>
 <tr>
 <td><b>3. Know what happened.</b> Each application and place gets an exact
 result. When Lyapunov arranges a window from a screen that is no longer
 connected, it reports the missing screen and places that window on one that is.</td>
-<td><b>Light and dark, English and French.</b> The stack follows the system's
-colour scheme and language. Keyboard: arrows to move, Enter to resume, Delete,
-F2 to edit, the menu key for more.</td>
+<td><b>Always current.</b> Once a day Lyapunov checks for a new release and
+shows how to update with your package manager, winget or a download. It
+follows the system's light or dark scheme and language (English, French);
+keyboard: arrows, Enter, Delete, F2, the menu key.</td>
 </tr>
 </table>
 
