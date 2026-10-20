@@ -632,37 +632,90 @@ const RUNNABLE: &[&str] = &[
     "cmd",
     "ps1",
     "psm1",
+    "psd1",
+    "ps1xml",
+    "ps2",
+    "ps2xml",
+    "psc1",
+    "psc2",
+    "msh",
+    "msh1",
+    "msh2",
+    "mshxml",
+    "msh1xml",
+    "msh2xml",
+    "vb",
     "vbs",
     "vbe",
+    "vbscript",
     "js",
     "jse",
+    "ws",
+    "wsc",
     "wsf",
     "wsh",
+    "sct",
+    "shb",
+    "shs",
     "msi",
     "msp",
     "mst",
     "scr",
     "lnk",
     "url",
+    "website",
     "hta",
+    "chm",
     "cpl",
     "pif",
     "reg",
+    "inf",
+    "ins",
+    "isp",
     "jar",
+    "jnlp",
     "appref-ms",
     "application",
+    "xbap",
+    "gadget",
     "msc",
+    "mcf",
     "appx",
+    "appxbundle",
     "msix",
+    "msixbundle",
     "appinstaller",
+    "settingcontent-ms",
+    "library-ms",
+    "searchconnector-ms",
+    "appcontent-ms",
+    "scf",
+    "diagcab",
+    "iqy",
+    "slk",
+    "xll",
+    "ade",
+    "adp",
+    "mda",
+    "mde",
+    "fxp",
+    "prg",
+    "dll",
+    "sys",
+    "ocx",
+    "drv",
+    "elf",
+    "so",
     "desktop",
     "sh",
     "bash",
     "zsh",
     "fish",
     "csh",
+    "ksh",
     "run",
     "bin",
+    "out",
     "appimage",
     "flatpakref",
     "flatpakrepo",
@@ -670,76 +723,113 @@ const RUNNABLE: &[&str] = &[
     "deb",
     "rpm",
     "pkg",
+    "dmg",
     "command",
     "tool",
+    "workflow",
     "py",
     "pyw",
+    "pyc",
+    "pyo",
+    "pyz",
+    "pyzw",
     "pl",
     "rb",
-    "elf",
-    "so",
-    "dll",
-    "sys",
-    "inf",
+    "php",
+    "lua",
+    "tcl",
 ];
 
-/// Why a place must not be opened, if it must not.
-pub fn refuse_place(path: &Path, folder: bool) -> Option<&'static str> {
-    if crate::card::is_network_path(&path.to_string_lossy()) {
-        return Some("network locations are not opened");
+/// The real path of a folder or document a card may open, or why it must not
+/// be opened. Links are resolved first, so the checks apply to what would
+/// really be opened, and only that resolved path is ever passed to the opener.
+pub fn checked_place(path: &Path, folder: bool) -> std::result::Result<std::path::PathBuf, &'static str> {
+    let raw = path.to_string_lossy();
+    if crate::card::is_network_path(&raw) {
+        return Err("network locations are not opened");
     }
-    let meta = std::fs::metadata(path).ok()?;
+    let real = std::fs::canonicalize(path).map_err(|_| "not found")?;
+    let real = strip_verbatim(real)?;
+    let meta = std::fs::metadata(&real).map_err(|_| "not found")?;
     if folder != meta.is_dir() {
-        return Some(if folder {
+        return Err(if folder {
             "no longer a folder"
         } else {
             "no longer a document"
         });
     }
     if meta.is_dir() {
-        return None;
+        return Ok(real);
     }
-    let ext = path
-        .extension()
-        .map(|e| e.to_string_lossy().to_lowercase())
-        .unwrap_or_default();
-    if RUNNABLE.contains(&ext.as_str()) {
-        return Some("programs and scripts are not opened from a card");
+    for candidate in [path, real.as_path()] {
+        let name = candidate
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        // Windows ignores trailing dots and spaces ("run.exe." runs run.exe).
+        if name.ends_with('.') || name.ends_with(' ') {
+            return Err("programs and scripts are not opened from a card");
+        }
+        let ext = name.rsplit_once('.').map(|(_, e)| e.to_lowercase()).unwrap_or_default();
+        if RUNNABLE.contains(&ext.as_str()) {
+            return Err("programs and scripts are not opened from a card");
+        }
+    }
+    #[cfg(windows)]
+    {
+        // An alternate data stream (doc.txt:payload.exe) names something else.
+        let s = real.to_string_lossy();
+        if s.get(2..).is_some_and(|rest| rest.contains(':')) {
+            return Err("programs and scripts are not opened from a card");
+        }
     }
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
         if meta.permissions().mode() & 0o111 != 0 {
-            return Some("programs and scripts are not opened from a card");
+            return Err("programs and scripts are not opened from a card");
         }
     }
-    None
+    Ok(real)
+}
+
+/// `canonicalize` returns `\\?\C:\…` on Windows; openers expect `C:\…`. A
+/// verbatim network path (`\\?\UNC\…`) is refused.
+fn strip_verbatim(p: std::path::PathBuf) -> std::result::Result<std::path::PathBuf, &'static str> {
+    let s = p.to_string_lossy();
+    if s.starts_with(r"\\?\UNC\") || s.starts_with(r"\\.\") {
+        return Err("network locations are not opened");
+    }
+    match s.strip_prefix(r"\\?\") {
+        Some(rest) => Ok(std::path::PathBuf::from(rest)),
+        None => Ok(p),
+    }
+}
+
+/// Why a place must not be opened, if it must not.
+pub fn refuse_place(path: &Path, folder: bool) -> Option<&'static str> {
+    checked_place(path, folder).err()
 }
 
 /// Opens a folder or document with the user's default application. Programs,
-/// scripts, launchers and network locations are refused (`refuse_place`).
+/// scripts, launchers and network locations are refused (`checked_place`).
 pub fn open_place(path: &Path, folder: bool) -> Result<()> {
-    if !path.exists() {
-        bail!("not found");
-    }
-    if let Some(reason) = refuse_place(path, folder) {
-        bail!("{reason}");
-    }
+    let real = checked_place(path, folder).map_err(|e| anyhow::anyhow!("{e}"))?;
     #[cfg(windows)]
     {
-        crate::backend::win32::shell_open(path)
+        crate::backend::win32::shell_open(&real)
     }
     #[cfg(not(windows))]
     {
         // Paths are absolute, so the opener never reads one as an option.
-        if !path.is_absolute() {
+        if !real.is_absolute() {
             bail!("not an absolute path");
         }
         let openers: [(&str, &[&str]); 3] = [("xdg-open", &[]), ("gio", &["open"]), ("kde-open", &[])];
         for (program, pre) in openers {
             if let Some(p) = find_program(program) {
                 let mut cmd = Command::new(p);
-                cmd.args(pre).arg(path);
+                cmd.args(pre).arg(&real);
                 spawn_detached(cmd).context("starting the default application")?;
                 return Ok(());
             }
@@ -966,6 +1056,17 @@ mod tests {
         assert!(refuse_place(&write("setup.EXE"), false).is_some());
         assert!(refuse_place(&write("evil.desktop"), false).is_some());
         assert!(refuse_place(&write("run.sh"), false).is_some());
+        assert!(
+            refuse_place(&write("trick.exe."), false).is_some(),
+            "Windows drops trailing dots"
+        );
+        assert!(refuse_place(&write("help.CHM"), false).is_some());
+        #[cfg(unix)]
+        {
+            let link = d.path().join("innocent.pdf");
+            std::os::unix::fs::symlink(write("payload.desktop"), &link).unwrap();
+            assert!(refuse_place(&link, false).is_some(), "links are judged by their target");
+        }
         assert!(refuse_place(&write("notes.txt"), true).is_some(), "the kind must match");
         assert_eq!(refuse_place(d.path(), true), None);
         #[cfg(unix)]
