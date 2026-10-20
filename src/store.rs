@@ -205,12 +205,16 @@ pub fn parse_card(bytes: &[u8]) -> Result<Card> {
     if bytes.len() > 4 * 1024 * 1024 {
         bail!("the card is larger than 4 MiB");
     }
-    let value: serde_json::Value = serde_json::from_slice(bytes).context("not valid JSON")?;
+    let mut value: serde_json::Value = serde_json::from_slice(bytes).context("not valid JSON")?;
     let version = value.get("version").and_then(|v| v.as_u64()).unwrap_or(0);
     if version > u64::from(card::VERSION) {
         bail!("this card was made by a newer Lyapunov (format version {version}); update Lyapunov to open it");
     }
-    // Migrations from older format versions go here, one step at a time.
+    // Version 2 adds an optional VS Code workspace. Existing cards need no
+    // field change, but are upgraded when they are next saved.
+    if version == 1 {
+        value["version"] = serde_json::json!(card::VERSION);
+    }
     let card: Card = serde_json::from_value(value).context("not a Lyapunov card")?;
     card.validate()?;
     Ok(card)
@@ -309,6 +313,17 @@ mod tests {
         let (cards, problems) = s.list().unwrap();
         assert!(cards.is_empty());
         assert!(problems[0].error.contains("newer Lyapunov"));
+    }
+
+    #[test]
+    fn version_one_cards_are_upgraded_without_losing_data() {
+        let mut old = Card::new("Old project");
+        old.version = 1;
+        let bytes = serde_json::to_vec(&old).unwrap();
+        let read = parse_card(&bytes).unwrap();
+        assert_eq!(read.version, card::VERSION);
+        assert_eq!(read.id, old.id);
+        assert_eq!(read.name, old.name);
     }
 
     #[test]

@@ -20,6 +20,9 @@ opens Lyapunov straight on the capture sheet.
 4. The open applications are listed with their windows. Untick what does not
    belong to this activity. Window titles are shown to help you recognise them;
    they are not saved.
+   For VS Code on Linux, choose an explicit **VS Code project folder** for its
+   entry after installing the [optional extension](../integrations/vscode/README.md).
+   The project path is saved in the card; its window position is not.
 5. Add folders and documents with the buttons, or drop them on the sheet.
 6. **Save card**. Nothing on your desktop moved.
 
@@ -38,6 +41,8 @@ The preview lists every step:
 - **Open — project not verified**: the application is open, but Lyapunov cannot
   identify its project or document. It leaves existing windows in place by
   default. You may opt in to moving them, after reviewing the preview.
+- **Open — project verified**: the VS Code extension reported the exact local
+  folder. Lyapunov leaves that window in place.
 - **Will be opened**: a folder or document.
 - **Unavailable**: not installed, not found, or not something a card opens.
 
@@ -51,11 +56,13 @@ will happen before resuming*. The preview still appears if moving already open
 windows is enabled.
 
 A card is a saved recipe, not a paused virtual desktop. Lyapunov never closes,
-freezes, or autosaves applications. For example, a VS Code window open on
-project A stays open on A when you resume a card for project B; Lyapunov does
-not yet know how to distinguish those projects or launch B beside A. Add the
-project folder to the card to open it explicitly, but check which application
-your desktop uses to open that folder.
+freezes, or autosaves applications. For VS Code with the optional extension,
+project A stays open while resuming a card for project B opens B in a new
+window. A second resume recognises B and does not duplicate it. A remote or
+multi-root workspace cannot yet be identified. If the extension cannot verify
+a launch, Lyapunov blocks another automatic launch of that folder; open the
+folder manually in VS Code and enable the extension to restore verification.
+Other applications still have no project-level recognition.
 
 From the command line, `lyapunov resume CARD` also leaves open windows in
 place, including on older cards that saved the move option. Use `--arrange`

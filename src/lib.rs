@@ -12,5 +12,6 @@ pub mod integrate;
 pub mod resume;
 pub mod store;
 pub mod time;
+pub mod vscode;
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

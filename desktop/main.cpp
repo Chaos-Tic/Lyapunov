@@ -331,7 +331,7 @@ protected:
                 QStringList names; for (const auto &x : d[key].toArray()) names << x.toString();
                 if (!names.isEmpty()) lines << title + " : " + names.join(", ");
             };
-            list("added_apps", L("Added")); list("removed_apps", L("No longer open")); list("moved_apps", L("Moved"));
+            list("added_apps", L("Added")); list("removed_apps", L("No longer open")); list("moved_apps", L("Changed"));
             s->body->addWidget(label(lines.isEmpty() ? L("Nothing changed since the card was saved.") : lines.join("\n"), "muted"));
         }
 
@@ -346,7 +346,7 @@ protected:
         s->body->addWidget(tint);
 
         s->body->addWidget(section(L("Applications and windows")));
-        struct Pick { QCheckBox *box; QJsonObject app; };
+        struct Pick { QCheckBox *box; QJsonObject app; QLineEdit *workspace; };
         auto picks = std::make_shared<QVector<Pick>>();
         const QJsonArray apps = scan["apps"].toArray();
         if (apps.isEmpty()) s->body->addWidget(label(L("No application window is open."), "muted"));
@@ -363,7 +363,26 @@ protected:
                 auto *h = label(hint, "hint"); h->setContentsMargins(30, 0, 0, 4); h->setFont(glass::font(12.5));
                 s->body->addWidget(h);
             }
-            picks->append({box, app});
+            QLineEdit *workspace = nullptr;
+            if (app["desktop"].toString() == "code.desktop") {
+                auto *row = new QWidget; auto *layout = new QHBoxLayout(row);
+                layout->setContentsMargins(30, 0, 0, 5);
+                workspace = new QLineEdit;
+                workspace->setPlaceholderText(L("VS Code project folder (optional)"));
+                workspace->setAccessibleName(L("VS Code project folder (optional)"));
+                if (existing) for (const auto &old : existing->raw["apps"].toArray()) {
+                    const QJsonObject item = old.toObject();
+                    if (item["desktop"].toString() == "code.desktop") workspace->setText(item["workspace"].toString());
+                }
+                auto *browse = new QPushButton(L("Choose…"));
+                connect(browse, &QPushButton::clicked, this, [workspace, this] {
+                    const QString folder = QFileDialog::getExistingDirectory(this, L("VS Code project folder"), workspace->text());
+                    if (!folder.isEmpty()) workspace->setText(folder);
+                });
+                layout->addWidget(workspace); layout->addWidget(browse);
+                s->body->addWidget(row);
+            }
+            picks->append({box, app, workspace});
         }
         if (!scan["limitation"].toString().isEmpty())
             s->body->addWidget(label(L("Windows are not arranged on this desktop: applications, folders and documents still reopen."), "hint"));
@@ -379,7 +398,14 @@ protected:
             if (name->text().trimmed().isEmpty()) {
                 error->setText(L("Give the card a name.")); error->show(); name->setFocus(); return;
             }
-            QJsonArray chosen; for (const auto &p : *picks) if (p.box->isChecked()) chosen.append(p.app);
+            QJsonArray chosen; for (const auto &p : *picks) if (p.box->isChecked()) {
+                QJsonObject app = p.app;
+                if (p.workspace && !p.workspace->text().trimmed().isEmpty()) {
+                    app["workspace"] = p.workspace->text().trimmed();
+                    app["windows"] = QJsonArray{};
+                }
+                chosen.append(app);
+            }
             QJsonObject draft{{"name", name->text().trimmed()}, {"tint", tint->value}, {"apps", chosen}, {"places", places->json()}};
             if (existing) {
                 draft["id"] = id; draft["note"] = existing->note;
@@ -408,6 +434,23 @@ protected:
         auto *tint = new TintPicker(c.tint); s->body->addWidget(tint);
         s->body->addWidget(section(L("Folders and documents")));
         auto *places = new PlaceList(c.places); s->body->addWidget(places);
+        auto *workspaceSection = section(L("VS Code project"));
+        s->body->addWidget(workspaceSection);
+        auto *workspace = new QLineEdit;
+        workspace->setPlaceholderText(L("VS Code project folder (optional)"));
+        workspace->setAccessibleName(L("VS Code project folder (optional)"));
+        bool hasCode = false;
+        for (const auto &v : c.raw["apps"].toArray()) if (v.toObject()["desktop"].toString() == "code.desktop") {
+            workspace->setText(v.toObject()["workspace"].toString()); hasCode = true; break;
+        }
+        workspaceSection->setVisible(hasCode);
+        workspace->setVisible(hasCode);
+        auto *browse = new QPushButton(L("Choose…")); browse->setVisible(hasCode);
+        connect(browse, &QPushButton::clicked, this, [workspace, this] {
+            const QString folder = QFileDialog::getExistingDirectory(this, L("VS Code project folder"), workspace->text());
+            if (!folder.isEmpty()) workspace->setText(folder);
+        });
+        s->body->addWidget(workspace); s->body->addWidget(browse);
         s->body->addWidget(section(L("Resume")));
         auto *ask = new QCheckBox(L("Show what will happen before resuming")); ask->setChecked(c.ask);
         auto *arrange = new QCheckBox(L("Move windows that are already open")); arrange->setChecked(c.arrange);
@@ -415,8 +458,17 @@ protected:
         s->addButton(L("Cancel"), false, [this] { closeSheet(); });
         s->addButton(L("Save"), true, [=] {
             if (name->text().trimmed().isEmpty()) { error->setText(L("Give the card a name.")); error->show(); return; }
+            QJsonArray apps;
+            for (const auto &v : c.raw["apps"].toArray()) {
+                QJsonObject app = v.toObject();
+                if (app["desktop"].toString() == "code.desktop") {
+                    if (workspace->text().trimmed().isEmpty()) app.remove("workspace");
+                    else { app["workspace"] = workspace->text().trimmed(); app["windows"] = QJsonArray{}; }
+                }
+                apps.append(app);
+            }
             QJsonObject draft{{"id", c.id}, {"name", name->text().trimmed()}, {"note", note->text().trimmed()}, {"tint", tint->value},
-                {"apps", c.raw["apps"]}, {"places", places->json()},
+                {"apps", apps}, {"places", places->json()},
                 {"resume", QJsonObject{{"ask", ask->isChecked()}, {"arrange_open_windows", arrange->isChecked()}}}};
             const core::Result saved = core::run({"save"}, QJsonDocument(draft).toJson(QJsonDocument::Compact));
             if (!saved.ok()) { error->setText(saved.error); error->show(); return; }
@@ -454,18 +506,30 @@ protected:
         auto steps = std::make_shared<QVector<Step>>();
         if (!plan["limitation"].toString().isEmpty())
             s->body->addWidget(label(L("Windows are not arranged on this desktop: applications, folders and documents still reopen."), "hint"));
-        s->body->addWidget(label(L("Lyapunov recognises the app, not its project or document. Open windows may belong to another space; nothing is closed."), "hint"));
+        bool hasUnverifiedApp = false, hasVsCodeProject = false;
+        for (const auto &v : plan["steps"].toArray()) {
+            const QJsonObject st = v.toObject();
+            if (st["kind"].toString() == "running" && st["reason"].toString() != "VS Code project verified") hasUnverifiedApp = true;
+            if (st["key"].toString().startsWith("app:") && st.contains("path")) hasVsCodeProject = true;
+        }
+        if (hasUnverifiedApp)
+            s->body->addWidget(label(L("Lyapunov recognises the app, not its project or document. Open windows may belong to another space; nothing is closed."), "hint"));
+        if (hasVsCodeProject)
+            s->body->addWidget(label(L("VS Code project windows are verified by the local extension and never moved automatically."), "hint"));
         const bool canArrange = plan["capabilities"].toObject()["geometry"].toBool();
         for (const auto &v : plan["steps"].toArray()) {
             const QJsonObject st = v.toObject();
             const QString kind = st["kind"].toString();
             QString what;
             if (kind == "launch") what = L("Will be started");
-            else if (kind == "running") what = L("Open — project not verified");
+            else if (kind == "running") what = st["reason"].toString() == "VS Code project verified" ? L("Open — project verified") : L("Open — project not verified");
             else if (kind == "open") what = L("Will be opened");
             else what = L("Unavailable") + " — " + translateNote(st["reason"].toString());
             QString title = st["name"].toString();
-            if (st.contains("path")) title += "   " + QDir::toNativeSeparators(QFileInfo(st["path"].toString()).path());
+            if (st.contains("path")) {
+                const QString path = st["path"].toString();
+                title += "   " + QDir::toNativeSeparators(st["key"].toString().startsWith("app:") ? path : QFileInfo(path).path());
+            }
             auto *box = new QCheckBox(title);
             box->setChecked(kind != "unavailable"); box->setEnabled(kind != "unavailable");
             box->setAccessibleName(title + ", " + what);
@@ -598,6 +662,7 @@ protected:
             auto *title = label(c["name"].toString(), "title"); s->body->addWidget(title);
             QStringList lines;
             for (const auto &e : c["executables"].toArray()) lines << L("Starts") + " : " + e.toString();
+            for (const auto &w : c["workspaces"].toArray()) lines << L("VS Code project") + " : " + QDir::toNativeSeparators(w.toString());
             for (const auto &p : c["places"].toArray()) lines << L("Opens") + " : " + QDir::toNativeSeparators(p.toString());
             if (!lines.isEmpty()) s->body->addWidget(label(lines.join("\n"), "hint"));
         }

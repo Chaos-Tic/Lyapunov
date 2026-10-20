@@ -321,6 +321,8 @@ struct ImportItem {
     /// Programs a resume would start: shown so an imported card never starts
     /// something unexpected.
     executables: Vec<String>,
+    /// Project folders that an application-specific adapter may open.
+    workspaces: Vec<String>,
     places: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     error: Option<String>,
@@ -721,6 +723,7 @@ fn run(command: Command) -> Result<()> {
                                 .iter()
                                 .filter_map(|a| a.exe.clone().or_else(|| a.desktop.clone()))
                                 .collect(),
+                            workspaces: c.apps.iter().filter_map(|a| a.workspace.clone()).collect(),
                             places: c.places.iter().map(|p| p.path.clone()).collect(),
                             error: None,
                         });
@@ -739,6 +742,7 @@ fn run(command: Command) -> Result<()> {
                         name,
                         apps: Vec::new(),
                         executables: Vec::new(),
+                        workspaces: Vec::new(),
                         places: Vec::new(),
                         error: Some(format!("{e:#}")),
                     }),
@@ -754,6 +758,9 @@ fn run(command: Command) -> Result<()> {
                         println!("{} {:?}", if dry_run { "would add" } else { "added" }, i.name);
                         for e in &i.executables {
                             println!("    starts: {e}");
+                        }
+                        for w in &i.workspaces {
+                            println!("    project: {w}");
                         }
                         for p in &i.places {
                             println!("    opens: {p}");

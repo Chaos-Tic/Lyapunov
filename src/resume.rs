@@ -12,6 +12,7 @@
 use crate::apps::{self, AppIndex};
 use crate::backend::{Backend, Capabilities, Placement, Snapshot, Window};
 use crate::card::{AppEntry, Card, PlaceKind, Rect, WindowSlot, WindowState};
+use crate::vscode;
 use anyhow::Result;
 use serde::Serialize;
 use std::collections::HashSet;
@@ -146,6 +147,7 @@ pub fn belongs(app: &AppEntry, w: &Window, index: &AppIndex) -> bool {
         desktop: id.desktop,
         exe: id.exe,
         class: id.class,
+        workspace: None,
         windows: Vec::new(),
     };
     if probe.key() == app.key() {
@@ -180,8 +182,26 @@ fn installed(app: &AppEntry, index: &AppIndex) -> Result<(), String> {
 pub fn plan(card: &Card, snap: &Snapshot, index: &AppIndex, backend: &dyn Backend, limitation: Option<String>) -> Plan {
     let mut steps = Vec::new();
     for (i, app) in card.apps.iter().enumerate() {
-        let open = snap.windows.iter().filter(|w| belongs(app, w, index)).count();
-        let (kind, reason) = if open > 0 {
+        let open = if let Some(folder) = &app.workspace {
+            vscode::folder(folder).ok().is_some_and(|path| vscode::is_open(&path)) as usize
+        } else {
+            snap.windows.iter().filter(|w| belongs(app, w, index)).count()
+        };
+        let (kind, reason) = if let Some(folder) = &app.workspace {
+            match vscode::folder(folder) {
+                Err(e) => (StepKind::Unavailable, Some(format!("workspace unavailable: {e}"))),
+                Ok(path) if vscode::is_open(&path) => (StepKind::Running, Some("VS Code project verified".into())),
+                Ok(path) if vscode::pending(&path) => (
+                    StepKind::Unavailable,
+                    Some("previous VS Code launch unverified; another window will not be opened".into()),
+                ),
+                Ok(_) if !vscode::available() => (
+                    StepKind::Unavailable,
+                    Some("install and enable the Lyapunov Workspace VS Code extension".into()),
+                ),
+                Ok(_) => (StepKind::Launch, Some("open VS Code project in a new window".into())),
+            }
+        } else if open > 0 {
             (
                 StepKind::Running,
                 Some("application identity only; project or document not verified".into()),
@@ -196,9 +216,9 @@ pub fn plan(card: &Card, snap: &Snapshot, index: &AppIndex, backend: &dyn Backen
             key: format!("app:{i}"),
             kind,
             name: app.name.clone(),
-            windows: app.windows.len(),
+            windows: if app.workspace.is_some() { 0 } else { app.windows.len() },
             open,
-            path: None,
+            path: app.workspace.clone(),
             folder: None,
             reason,
         });
@@ -376,10 +396,47 @@ pub fn execute(
             name: app.name.clone(),
             status: Status::Skipped,
             placed: 0,
-            windows: app.windows.len(),
+            windows: if app.workspace.is_some() { 0 } else { app.windows.len() },
             notes: Vec::new(),
         };
         if !opts.selected(&step.key) {
+            outcomes.push(o);
+            continue;
+        }
+        if let Some(folder) = &app.workspace {
+            match step.kind {
+                StepKind::Running => {
+                    o.status = Status::LeftOpen;
+                    o.notes
+                        .push("VS Code project verified; its window was left in place".into());
+                }
+                StepKind::Launch => {
+                    progress(Progress::Starting {
+                        key: &step.key,
+                        name: &app.name,
+                    });
+                    match vscode::folder(folder).and_then(|path| vscode::launch(&path, opts.timeout)) {
+                        Ok(true) => {
+                            o.status = Status::AppLaunched;
+                            o.notes
+                                .push("project verified in a new VS Code window; placement was not attempted".into());
+                        }
+                        Ok(false) => {
+                            o.status = Status::Failed;
+                            o.notes.push("VS Code was asked to open the project, but its window was not verified; another launch is blocked".into());
+                        }
+                        Err(e) => {
+                            o.status = Status::Failed;
+                            o.notes.push(format!("{e:#}"));
+                        }
+                    }
+                }
+                StepKind::Unavailable => {
+                    o.status = Status::Unavailable;
+                    o.notes.extend(step.reason.clone());
+                }
+                StepKind::Open => unreachable!(),
+            }
             outcomes.push(o);
             continue;
         }
@@ -488,7 +545,7 @@ pub fn execute(
                 Status::WindowFound => opts.arrange_open_windows,
                 _ => false,
             };
-            if !arrange || app.windows.is_empty() {
+            if !arrange || app.workspace.is_some() || app.windows.is_empty() {
                 continue;
             }
             // New windows first, then those that were already open, each in
@@ -566,7 +623,7 @@ pub fn execute(
         }
         for (i, app) in card.apps.iter().enumerate() {
             let o = &mut outcomes[i];
-            let arranged = matches!(o.status, Status::AppLaunched | Status::WindowFound);
+            let arranged = app.workspace.is_none() && matches!(o.status, Status::AppLaunched | Status::WindowFound);
             if arranged && o.placed < app.windows.len() {
                 let missing = app.windows.len() - o.placed;
                 if o.status == Status::AppLaunched && o.placed == 0 && !app.windows.is_empty() {
@@ -582,7 +639,10 @@ pub fn execute(
         }
     } else if !caps.geometry {
         for (i, app) in card.apps.iter().enumerate() {
-            if !app.windows.is_empty() && matches!(outcomes[i].status, Status::AppLaunched | Status::LeftOpen) {
+            if app.workspace.is_none()
+                && !app.windows.is_empty()
+                && matches!(outcomes[i].status, Status::AppLaunched | Status::LeftOpen)
+            {
                 outcomes[i]
                     .notes
                     .push("windows are not arranged on this desktop".into());

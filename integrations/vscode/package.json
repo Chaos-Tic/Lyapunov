@@ -1,0 +1,14 @@
+{
+  "name": "lyapunov-workspace",
+  "displayName": "Lyapunov Workspace",
+  "description": "Reports the current local folder to Lyapunov so a card can reuse the right VS Code project.",
+  "version": "0.1.0",
+  "publisher": "chaos-tic",
+  "license": "GPL-3.0-or-later",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["Other"],
+  "main": "./extension.js",
+  "extensionKind": ["ui"],
+  "capabilities": { "untrustedWorkspaces": { "supported": true } },
+  "activationEvents": ["onStartupFinished"]
+}

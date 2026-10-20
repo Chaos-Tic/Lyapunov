@@ -14,6 +14,7 @@
 | `scripts/test-sessions-container.sh` | The same under Openbox, Xfwm4, i3 and headless sway | Arch container |
 | `scripts/test-packages-container.sh` | `.deb`, `.rpm` and Arch packages built in their distribution, installed, used and removed in clean containers | Docker or Podman |
 | `scripts/test-install-container.sh IMAGE` | `./install.sh --yes` then `./uninstall.sh` as a normal user | Debian, Ubuntu, Fedora, Arch, openSUSE |
+| `scripts/test-vscode-isolated.sh` | Installs the optional extension in a disposable VS Code profile, opens A on a private X server, resumes B twice, checks exactly A and B remain | Linux host with VS Code and Xvfb |
 
 The end-to-end check ([`tests/e2e/session_check.py`](../tests/e2e/session_check.py))
 opens a window, captures it, checks that no title reached the card, moves it

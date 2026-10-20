@@ -13,6 +13,8 @@ flowchart TD
     Shell[Terminal, scripts, shortcuts] --> CLI
     CLI --> Store[Cards: one JSON file each, atomic writes]
     CLI --> Apps[Desktop entries, Flatpak, Snap, executables]
+    CLI --> VSCode[VS Code folder adapter]
+    Extension[Optional VS Code extension] -->|private runtime marker| VSCode
     CLI --> Backend{Window backend}
     Backend --> KWin[KWin script over D-Bus]
     Backend --> Gnome[GNOME Shell extension over D-Bus]
@@ -23,7 +25,7 @@ flowchart TD
     Backend --> None[Launch only]
     classDef base fill:#171d23,stroke:#3b4c54,color:#edf3f1
     classDef accent fill:#3a2f4a,stroke:#d8c3fa,color:#edf3f1
-    class UI,Shell,Store,Apps,KWin,Gnome,X11,I3,Hypr,Win,None base
+    class UI,Shell,Store,Apps,Extension,VSCode,KWin,Gnome,X11,I3,Hypr,Win,None base
     class CLI,Backend accent
 ```
 
@@ -36,6 +38,7 @@ flowchart TD
 | [`src/apps.rs`](../src/apps.rs) | Recognising an application from its window, starting it, opening folders and documents safely |
 | [`src/capture.rs`](../src/capture.rs) | Grouping open windows by application into a card |
 | [`src/resume.rs`](../src/resume.rs) | The plan, starting and waiting, fitting windows onto present screens, the report |
+| [`src/vscode.rs`](../src/vscode.rs), [`integrations/vscode/`](../integrations/vscode/) | Opt-in Linux VS Code project recognition through a private runtime marker |
 | [`src/backend/`](../src/backend/) | One file per desktop technology, and the detection that picks one |
 | [`src/integrate.rs`](../src/integrate.rs) | Menu entry, icons, GNOME extension installation and trust |
 | [`src/main.rs`](../src/main.rs) | The command line |
@@ -48,7 +51,7 @@ flowchart TD
 
 ```json
 {
-  "format": "lyapunov-card", "version": 1,
+  "format": "lyapunov-card", "version": 2,
   "id": "…uuid…", "name": "Trip photos", "note": "", "tint": "sky",
   "created": "2026-10-20T15:04:05Z", "modified": "2026-10-20T15:04:05Z",
   "apps": [{
@@ -69,6 +72,10 @@ flowchart TD
   geometry is kept so a window can be moved proportionally when that screen is
   gone or changed size.
 - Window titles and URLs are never part of a card.
+- A VS Code entry may contain `"workspace": "/absolute/local/folder"`.
+  Version 1 cards are read and upgraded when saved. The VS Code adapter
+  requires its optional extension; it never arranges a project window without
+  a reliable window-to-project mapping.
 - Every field is validated on save and on load: lengths, control characters,
   absolute paths, no network paths, desktop entry IDs without separators,
   bounded geometry. A card written by a newer format version is reported and

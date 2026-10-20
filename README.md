@@ -27,8 +27,9 @@ A **card** is one activity: "Personal website", "Trip photos", "Paperwork". It
 keeps application identities and window layouts, plus the folders and
 documents you chose to add. **Resuming** starts missing applications, leaves
 open ones running, and arranges newly opened windows as far as your desktop
-allows. Moving windows that were already open is an explicit option: Lyapunov
-cannot tell which project or document they contain. Before anything happens,
+allows. Moving windows that were already open is an explicit option. The
+optional VS Code integration can distinguish one local project folder per
+window; other applications are recognised by app identity only. Before anything happens,
 Lyapunov shows what it will do; afterwards it says exactly what it did:
 *window found*, *application started* or *unavailable*.
 
@@ -125,14 +126,16 @@ release: [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
 
 ## What a card does not restore
 
-Text you have not saved, the inside of an application (its project, tabs,
-history or selection), a website login, a password or a disconnected device.
+Text you have not saved, tabs, history or selection inside an application,
+a website login, a password or a disconnected device.
 A card is a saved recipe, not a paused virtual desktop: it does not close,
-freeze or autosave applications. If VS Code is open on project A, resuming a
-card for project B does not switch that window to B or launch a second instance.
-Lyapunov reopens applications, folders and documents and arranges windows; it
-never claims more. Per-application project restoration may come later through
-explicit integrations. Browser tabs may come later, through an optional extension.
+freeze or autosave applications. On Linux, install the optional
+[VS Code extension](integrations/vscode/README.md) and choose a project folder
+for the VS Code entry in a card. Resuming B then opens B in a separate window
+while A remains open; another resume recognises B and leaves it in place.
+The integration does not restore VS Code's unsaved state or place its windows.
+Other applications have no project-level integration yet. Browser tabs may
+come later through an optional extension.
 
 ## Privacy
 

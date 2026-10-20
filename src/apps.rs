@@ -579,7 +579,7 @@ fn clean_path_var(name: &str) -> Option<std::ffi::OsString> {
     std::env::join_paths(kept).ok()
 }
 
-fn clean_environment(cmd: &mut Command) {
+pub(crate) fn clean_environment(cmd: &mut Command) {
     for k in ["LYAPUNOV_BACKEND", "LYAPUNOV_DATA_DIR"] {
         cmd.env_remove(k);
     }

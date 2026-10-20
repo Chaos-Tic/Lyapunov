@@ -105,6 +105,7 @@ pub fn candidates(snap: &Snapshot, index: &AppIndex, exclude_pids: &[u32]) -> Ve
             desktop: id.desktop,
             exe: id.exe,
             class: id.class,
+            workspace: None,
             windows: Vec::new(),
         };
         let key = app.key();

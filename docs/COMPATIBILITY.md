@@ -24,6 +24,16 @@ user's full desktop. Each row is redone before a release (see
 | GNOME 45–49 | `gnome` | declared in the extension, not run | not verified | — |
 | Real sessions: Plasma (moving windows), GNOME, Cinnamon, MATE, Xfce, Hyprland, Windows 10/11 | | | not verified | — |
 
+## VS Code project integration
+
+| Scenario | Checked | Result | Date |
+| --- | --- | --- | --- |
+| Linux VS Code 1.138, Xvfb, disposable profile | A open; card for B opens a new window; second resume reuses B; two folder markers remain | pass | 2026-10-20 |
+
+This verifies project presence and duplicate prevention in an isolated VS
+Code session. Window placement, unsaved buffers, remote workspaces and
+multi-root workspaces are outside this integration.
+
 ## Packages
 
 Built in CI on every change; see the latest run of the

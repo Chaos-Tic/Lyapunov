@@ -9,7 +9,7 @@ use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
 
 pub const FORMAT: &str = "lyapunov-card";
-pub const VERSION: u32 = 1;
+pub const VERSION: u32 = 2;
 
 pub const MAX_NAME: usize = 80;
 pub const MAX_NOTE: usize = 280;
@@ -133,6 +133,9 @@ pub struct AppEntry {
     pub exe: Option<String>,
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub class: String,
+    /// Explicit local folder to open in VS Code. Never inferred from a title.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub workspace: Option<String>,
     #[serde(default)]
     pub windows: Vec<WindowSlot>,
 }
@@ -286,6 +289,15 @@ impl Card {
                 }
             }
             check_text("window class", &app.class)?;
+            if let Some(folder) = &app.workspace {
+                check_text("workspace", folder)?;
+                if !is_absolute_anywhere(folder) || is_network_path(folder) {
+                    bail!("the VS Code workspace must be an absolute local folder");
+                }
+                if app.desktop.as_deref() != Some("code.desktop") {
+                    bail!("workspace folders are currently supported only for VS Code");
+                }
+            }
             if app.desktop.is_none() && app.exe.is_none() && app.class.trim().is_empty() {
                 bail!("application {:?} cannot be recognised", app.name);
             }
@@ -325,7 +337,7 @@ impl Card {
     /// Removes duplicate applications and places, keeping the first of each.
     pub fn dedupe(&mut self) {
         let mut seen = std::collections::HashSet::new();
-        self.apps.retain(|a| seen.insert(a.key()));
+        self.apps.retain(|a| seen.insert((a.key(), a.workspace.clone())));
         let mut paths = std::collections::HashSet::new();
         self.places.retain(|p| paths.insert(p.path.clone()));
     }
@@ -416,7 +428,7 @@ pub fn diff(old: &Card, new: &Card) -> Diff {
     for a in &new.apps {
         match old.apps.iter().find(|o| o.key() == a.key()) {
             None => d.added_apps.push(a.name.clone()),
-            Some(o) if o.windows != a.windows => d.moved_apps.push(a.name.clone()),
+            Some(o) if o.windows != a.windows || o.workspace != a.workspace => d.moved_apps.push(a.name.clone()),
             Some(_) => {}
         }
     }
@@ -464,6 +476,19 @@ mod tests {
     #[test]
     fn a_captured_card_is_valid() {
         sample().validate().unwrap();
+    }
+
+    #[test]
+    fn workspace_requires_a_local_absolute_folder_and_vscode() {
+        let mut c = sample();
+        c.apps[0].workspace = Some("/home/user/site".into());
+        assert!(c.validate().is_err());
+        c.apps[0].desktop = Some("code.desktop".into());
+        assert!(c.validate().is_ok());
+        c.apps[0].workspace = Some("relative/site".into());
+        assert!(c.validate().is_err());
+        c.apps[0].workspace = Some("//server/site".into());
+        assert!(c.validate().is_err());
     }
 
     #[test]
