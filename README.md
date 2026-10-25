@@ -20,7 +20,10 @@
 > another, and your work space finds its way back.
 
 <p align="center">
-  <img src="docs/media/stack.gif" alt="A stack of frosted-glass cards named Personal website, Trip photos, Paperwork, Reading list and Music practice. Selecting each one slides it open in place, showing its applications, its folders and a Resume this space button, while the other cards stay visible as bands." width="600">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/media/stack-dark.gif">
+    <img src="docs/media/stack.gif" alt="A stack of frosted-glass cards named Personal website, Trip photos, Paperwork, Reading list and Music practice. Selecting each one slides it open in place, showing its applications, its folders and a Resume this space button, while the other cards stay visible as bands." width="600">
+  </picture>
 </p>
 
 A **card** is one activity: "Personal website", "Trip photos", "Paperwork". It
@@ -50,8 +53,8 @@ they become available. What is verified and what is not is listed in
 
 <table>
 <tr>
-<td width="50%"><img src="docs/media/capture.png" alt="The Capture this space sheet: a name field, seven colour swatches with the chosen colour's name, the open applications with their window titles and a check box each, and buttons to add folders and documents."></td>
-<td width="50%"><img src="docs/media/plan.png" alt="The Resume Trip photos sheet warns that an open application's project is not verified, then lists darktable (will be started), Dolphin (open), Gwenview (unavailable) and two places to open, each with a check box."></td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/media/capture-dark.png"><img src="docs/media/capture.png" alt="The Capture this space sheet: a name field, seven colour swatches with the chosen colour's name, the open applications with their window titles and a check box each, and buttons to add folders and documents."></picture></td>
+<td width="50%"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/media/plan-dark.png"><img src="docs/media/plan.png" alt="The Resume Trip photos sheet warns that an open application's project is not verified, then lists darktable (will be started), Dolphin (open), Gwenview (unavailable) and two places to open, each with a check box."></picture></td>
 </tr>
 <tr>
 <td><b>1. Capture.</b> Name the activity and pick a colour. Lyapunov lists the
@@ -64,8 +67,8 @@ leave out any step. An open application stays open, but its project is not
 identified or switched.</td>
 </tr>
 <tr>
-<td><img src="docs/media/report.png" alt="The report after resuming Trip photos: darktable started with 1 of 1 window placed, Dolphin window found with 1 of 2 windows placed and a note that 1 saved window was not reopened, Gwenview unavailable because it is not installed, and two places opened."></td>
-<td><img src="docs/media/update.png" alt="A line under the title says that a newer Lyapunov is available; the Update Lyapunov sheet shows the command for the way it was installed, a Copy the command button, the release page and a check box to keep checking once a day."></td>
+<td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/media/report-dark.png"><img src="docs/media/report.png" alt="The report after resuming Trip photos: darktable started with 1 of 1 window placed, Dolphin window found with 1 of 2 windows placed and a note that 1 saved window was not reopened, Gwenview unavailable because it is not installed, and two places opened."></picture></td>
+<td><picture><source media="(prefers-color-scheme: dark)" srcset="docs/media/update-dark.png"><img src="docs/media/update.png" alt="A line under the title says that a newer Lyapunov is available; the Update Lyapunov sheet shows the command for the way it was installed, a Copy the command button, the release page and a check box to keep checking once a day."></picture></td>
 </tr>
 <tr>
 <td><b>3. Know what happened.</b> Each application and place gets an exact
