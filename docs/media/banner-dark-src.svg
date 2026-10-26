@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+<title id="title">Lyapunov — Pick up where you left off.</title>
+<desc id="desc">A stack of frosted-glass cards, one per activity; the Trip photos card is open with its applications and a Resume button.</desc>
+<defs>
+<clipPath id="card"><rect width="1200" height="300" rx="24"/></clipPath>
+<filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="60"/></filter>
+<filter id="lift" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#000" flood-opacity=".45"/></filter>
+<linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".18"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<linearGradient id="front" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffc39a"/><stop offset=".55" stop-color="#f29bb8"/><stop offset="1" stop-color="#a98cf0"/></linearGradient>
+<linearGradient id="back" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9fdcf8"/><stop offset="1" stop-color="#6aa8f0"/></linearGradient>
+
+<clipPath id="lg-t"><rect x="8" y="8" width="240" height="240" rx="58"/></clipPath>
+<filter id="lg-soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="26"/></filter>
+<filter id="lg-lift" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="9" flood-color="#2a1e5c" flood-opacity=".22"/></filter>
+<linearGradient id="lg-sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".75"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<linearGradient id="lg-film" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#78e0ff"/><stop offset=".3" stop-color="#aa96ff"/><stop offset=".55" stop-color="#ff96d6"/><stop offset=".8" stop-color="#ffd68c"/><stop offset="1" stop-color="#78e0ff"/></linearGradient>
+</defs>
+<g clip-path="url(#card)">
+<rect width="1200" height="300" fill="#15172a"/>
+<g filter="url(#soft)"><circle cx="760" cy="40" r="170" fill="#7a4a3a"/><circle cx="1130" cy="120" r="190" fill="#2d4f7a"/><circle cx="930" cy="330" r="170" fill="#4b3a78"/><circle cx="260" cy="320" r="200" fill="#2a2a48"/><circle cx="80" cy="0" r="160" fill="#3d3524"/></g>
+<g font-family="Geist, 'Segoe UI', Inter, -apple-system, Helvetica, Arial, sans-serif">
+<g filter="url(#lift)"><rect x="714" y="34" width="412" height="66" rx="20" fill="#ffad85" fill-opacity=".42"/>
+<rect x="714" y="34" width="412" height="66" rx="20" fill="#fff" fill-opacity=".14"/>
+<rect x="714" y="34" width="412" height="66" rx="20" fill="url(#sheen)"/>
+<rect x="714.6" y="34.6" width="410.8" height="64.8" rx="19.4" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="1.2"/></g>
+<circle cx="744" cy="58" r="13" fill="#ffd6c0" stroke="#fff" stroke-opacity=".8"/><rect x="736.5" y="51.0" width="15" height="4" rx="2" fill="#fff" fill-opacity=".5"/><rect x="736.5" y="54.0" width="15" height="11" rx="3" fill="#fff"/>
+<text x="768" y="63" fill="#f3f4f8" font-size="15" font-weight="600">Personal website</text>
+<g filter="url(#lift)"><rect x="700" y="82" width="440" height="124" rx="20" fill="#5fbcf2" fill-opacity=".55"/>
+<rect x="700" y="82" width="440" height="124" rx="20" fill="#fff" fill-opacity=".14"/>
+<rect x="700" y="82" width="440" height="124" rx="20" fill="url(#sheen)"/>
+<rect x="700.6" y="82.6" width="438.8" height="122.8" rx="19.4" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="1.2"/></g>
+<circle cx="730" cy="106" r="13" fill="#bfe6fb" stroke="#fff" stroke-opacity=".8"/><rect x="722.5" y="99.0" width="15" height="4" rx="2" fill="#fff" fill-opacity=".5"/><rect x="722.5" y="102.0" width="15" height="11" rx="3" fill="#fff"/>
+<text x="754" y="111" fill="#f3f4f8" font-size="15" font-weight="600">Trip photos</text>
+<rect x="720" y="134" width="84" height="24" rx="12" fill="#fff" fill-opacity=".12"/><text x="762" y="150" text-anchor="middle" fill="#f3f4f8" font-size="11">darktable</text>
+<rect x="812" y="134" width="84" height="24" rx="12" fill="#fff" fill-opacity=".12"/><text x="854" y="150" text-anchor="middle" fill="#f3f4f8" font-size="11">Dolphin</text>
+<rect x="904" y="134" width="84" height="24" rx="12" fill="#fff" fill-opacity=".12"/><text x="946" y="150" text-anchor="middle" fill="#f3f4f8" font-size="11">Gwenview</text>
+<rect x="720" y="170" width="150" height="28" rx="14" fill="#9fdcf8"/><text x="795" y="188" text-anchor="middle" fill="#10131c" font-size="12" font-weight="600">Resume this space</text>
+<g filter="url(#lift)"><rect x="714" y="214" width="412" height="66" rx="20" fill="#ad8cf0" fill-opacity=".42"/>
+<rect x="714" y="214" width="412" height="66" rx="20" fill="#fff" fill-opacity=".14"/>
+<rect x="714" y="214" width="412" height="66" rx="20" fill="url(#sheen)"/>
+<rect x="714.6" y="214.6" width="410.8" height="64.8" rx="19.4" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="1.2"/></g>
+<circle cx="744" cy="238" r="13" fill="#ddd0fa" stroke="#fff" stroke-opacity=".8"/><rect x="736.5" y="231.0" width="15" height="4" rx="2" fill="#fff" fill-opacity=".5"/><rect x="736.5" y="234.0" width="15" height="11" rx="3" fill="#fff"/>
+<text x="768" y="243" fill="#f3f4f8" font-size="15" font-weight="600">Paperwork</text>
+<g filter="url(#lift)"><rect x="714" y="254" width="412" height="66" rx="20" fill="#5fd0aa" fill-opacity=".42"/>
+<rect x="714" y="254" width="412" height="66" rx="20" fill="#fff" fill-opacity=".14"/>
+<rect x="714" y="254" width="412" height="66" rx="20" fill="url(#sheen)"/>
+<rect x="714.6" y="254.6" width="410.8" height="64.8" rx="19.4" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="1.2"/></g>
+<circle cx="744" cy="278" r="13" fill="#c4f0e0" stroke="#fff" stroke-opacity=".8"/><rect x="736.5" y="271.0" width="15" height="4" rx="2" fill="#fff" fill-opacity=".5"/><rect x="736.5" y="274.0" width="15" height="11" rx="3" fill="#fff"/>
+<text x="768" y="283" fill="#f3f4f8" font-size="15" font-weight="600">Reading list</text>
+</g>
+</g>
+<g transform="translate(52 82) scale(.53)">
+<g clip-path="url(#lg-t)">
+<rect x="8" y="8" width="240" height="240" fill="#f1eefb"/>
+<g filter="url(#lg-soft)"><circle cx="40" cy="40" r="90" fill="#ffb48f"/><circle cx="235" cy="110" r="95" fill="#8fcaff"/><circle cx="120" cy="250" r="95" fill="#d6b0ff"/></g>
+</g>
+<rect x="9" y="9" width="238" height="238" rx="57" fill="none" stroke="#fff" stroke-opacity=".9" stroke-width="2"/>
+<g filter="url(#lg-lift)"><rect x="56" y="40" width="144" height="58" rx="20" fill="#ffad85" fill-opacity=".78"/></g>
+<rect x="56" y="40" width="144" height="58" rx="20" fill="#fff" fill-opacity=".18"/>
+<rect x="56" y="40" width="144" height="58" rx="20" fill="url(#lg-sheen)"/>
+<rect x="57" y="41" width="142" height="56" rx="19" fill="none" stroke="#fff" stroke-opacity=".95" stroke-width="2"/><g filter="url(#lg-lift)"><rect x="56" y="170" width="144" height="58" rx="20" fill="#ad8cf0" fill-opacity=".78"/></g>
+<rect x="56" y="170" width="144" height="58" rx="20" fill="#fff" fill-opacity=".18"/>
+<rect x="56" y="170" width="144" height="58" rx="20" fill="url(#lg-sheen)"/>
+<rect x="57" y="171" width="142" height="56" rx="19" fill="none" stroke="#fff" stroke-opacity=".95" stroke-width="2"/><g filter="url(#lg-lift)"><rect x="34" y="70" width="188" height="118" rx="20" fill="#5fbcf2" fill-opacity=".82"/></g>
+<rect x="34" y="70" width="188" height="118" rx="20" fill="#fff" fill-opacity=".18"/>
+<rect x="34" y="70" width="188" height="118" rx="20" fill="url(#lg-sheen)"/>
+<rect x="35" y="71" width="186" height="116" rx="19" fill="none" stroke="#fff" stroke-opacity=".95" stroke-width="2"/><rect x="33" y="69" width="190" height="120" rx="21" fill="none" stroke="url(#lg-film)" stroke-width="2.5"/><circle cx="62" cy="98" r="11" fill="#fff"/><rect x="82" y="92" width="80" height="11" rx="5.5" fill="#fff" fill-opacity=".95"/><rect x="54" y="148" width="104" height="26" rx="13" fill="#151820"/><path d="M99 154 l10 7 l-10 7 z" fill="#fff"/>
+</g>
+<g font-family="Geist, 'Segoe UI', Inter, -apple-system, Helvetica, Arial, sans-serif">
+<text x="210" y="148" fill="#f3f4f8" font-size="58" font-weight="700" letter-spacing="-1">Lyapunov</text>
+<text x="212" y="186" fill="#bcc2d0" font-size="22">Pick up where you left off.</text>
+</g>
+</svg>
