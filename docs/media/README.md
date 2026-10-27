@@ -22,3 +22,7 @@ flattening the banners; nothing is installed on the host or fetched at render
 time. `render-docs.sh` needs ffmpeg, ImageMagick and Inkscape.
 
 Regenerate after a visual change: `cmake --build build && scripts/render-docs.sh`.
+
+## Aligned banner and hero
+
+`banner(-dark).png` and `hero(-dark).{png,gif}` come from the shared Chaos-Tic template (same grid, background and glass frame for all three tools), built from the captures in this folder.

@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/media/banner-dark.svg">
-    <img src="docs/media/banner.svg" alt="Lyapunov — Pick up where you left off." width="100%">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/media/banner-dark.png">
+    <img src="docs/media/banner.png" alt="Lyapunov — Pick up where you left off." width="100%">
   </picture>
 </p>
 
@@ -21,8 +21,8 @@
 
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/media/stack-dark.gif">
-    <img src="docs/media/stack.gif" alt="A stack of frosted-glass cards named Personal website, Trip photos, Paperwork, Reading list and Music practice. Selecting each one slides it open in place, showing its applications, its folders and a Resume this space button, while the other cards stay visible as bands." width="600">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/media/hero-dark.gif">
+    <img src="docs/media/hero.gif" alt="A stack of frosted-glass cards named Personal website, Trip photos, Paperwork, Reading list and Music practice. Selecting each one slides it open in place, showing its applications, its folders and a Resume this space button, while the other cards stay visible as bands." width="100%">
   </picture>
 </p>
 
