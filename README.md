@@ -22,7 +22,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/media/hero-dark.gif">
-    <img src="docs/media/hero.gif" alt="A stack of frosted-glass cards named Personal website, Trip photos, Paperwork, Reading list and Music practice. Selecting each one slides it open in place, showing its applications, its folders and a Resume this space button, while the other cards stay visible as bands." width="100%">
+    <img src="docs/media/hero.gif" alt="Capture this space names a new card Trip photos, picks the Sky colour, keeps darktable, Dolphin and Gwenview, leaves Firefox out, adds the Lisbon 2026 folder and saves the card into the stack. Opening the card and pressing Resume this space shows the plan (will be started, open, unavailable, will be opened), then the report of what was done." width="100%">
   </picture>
 </p>
 
