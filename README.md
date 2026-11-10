@@ -40,7 +40,7 @@ Everything runs on your computer. No account, no telemetry; the only network use
 once-a-day check for a new version on GitHub, which you can turn off.
 Cards are small JSON files in a private folder.
 
-**Version 0.2.0.** Install it with your package manager, [from source](#install), or
+**Version 0.2.1.** Install it with your package manager, [from source](#install), or
 from the [latest release](https://github.com/Chaos-Tic/Lyapunov/releases/latest);
 Lyapunov tells you when a newer version is out.
 Package-manager channels are listed in [Packaging](packaging/README.md) as
