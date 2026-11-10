@@ -10,7 +10,7 @@ engine=$(command -v docker || command -v podman) || { echo "Docker or Podman is 
 set -e
 # sudo and runuser (util-linux) are missing from minimal images.
 if command -v apt-get >/dev/null; then apt-get update -qq && apt-get install -y -qq sudo >/dev/null
-elif command -v pacman >/dev/null; then pacman -Sy --noconfirm --needed sudo util-linux >/dev/null
+elif command -v pacman >/dev/null; then pacman -Syu --noconfirm --needed sudo util-linux >/dev/null
 elif command -v dnf >/dev/null; then dnf install -y -q sudo util-linux shadow-utils >/dev/null
 elif command -v zypper >/dev/null; then zypper --non-interactive install sudo util-linux shadow >/dev/null
 fi

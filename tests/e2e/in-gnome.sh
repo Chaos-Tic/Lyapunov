@@ -7,8 +7,19 @@ uuid=lyapunov@chaos-tic.github.io
 mkdir -p /run/dbus && dbus-daemon --system --fork
 python3 -m dbusmock --system --template logind >/tmp/logind.log 2>&1 &
 for _ in $(seq 50); do busctl --system status org.freedesktop.login1 >/dev/null 2>&1 && break; sleep 0.1; done
+# GNOME Shell 51 asks logind for its user; the mock's own GetUser fails on the
+# number it is given, so the user is added and GetUser answered here.
+gdbus call --system -d org.freedesktop.login1 -o /org/freedesktop/login1 \
+    -m org.freedesktop.DBus.Mock.AddUser 0 root true >/dev/null
+gdbus call --system -d org.freedesktop.login1 -o /org/freedesktop/login1 \
+    -m org.freedesktop.DBus.Mock.AddMethod org.freedesktop.login1.Manager GetUser u o \
+    'ret = "/org/freedesktop/login1/user/" + str(args[0])' >/dev/null
 export HOME=/tmp/home XDG_RUNTIME_DIR=/tmp/runtime XDG_DATA_HOME=/tmp/home/.local/share
 export XDG_CONFIG_HOME=/tmp/home/.config LYAPUNOV_DATA_DIR=/tmp/cards XDG_SESSION_TYPE=wayland
+# Services the bus starts (dconf above all) get this environment too: without
+# it the settings are written under another home and the Shell never sees
+# the extension enabled.
+dbus-update-activation-environment HOME XDG_RUNTIME_DIR XDG_DATA_HOME XDG_CONFIG_HOME XDG_SESSION_TYPE
 mkdir -p "$XDG_RUNTIME_DIR" "$XDG_DATA_HOME/gnome-shell/extensions" /tmp/cards /tmp/evidence
 chmod 700 "$XDG_RUNTIME_DIR"
 # Installed the way users do: the command writes the extension and trusts

@@ -4,7 +4,7 @@
 %bcond vendor 1
 
 Name:           lyapunov
-Version:        0.2.0
+Version:        0.2.1
 Release:        1%{?dist}
 Summary:        Save an activity as a card and resume it later
 
@@ -85,6 +85,9 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/lyapunov.desktop
 %{_datadir}/gnome-shell/extensions/lyapunov@chaos-tic.github.io
 
 %changelog
+* Tue Nov 10 2026 Chaos-Tic <58691435+Chaos-Tic@users.noreply.github.com> - 0.2.1-1
+- Ship the Visual C++ runtime in the Windows installer
+
 * Tue Oct 20 2026 Chaos-Tic <58691435+Chaos-Tic@users.noreply.github.com> - 0.2.0-1
 - Offer updates, new icon, standard CMake install rules
 
