@@ -14,7 +14,7 @@ user's full desktop. Each row is redone before a release (see
 | --- | --- | --- | --- | --- |
 | KDE Plasma 6.8, Wayland (Arch, real machine) | `kwin` | `lyapunov doctor` and `scan`: windows listed and applications recognised | pass | 2026-10-20 |
 | KWin 6.8, nested Wayland session | `kwin` | full end-to-end check | pass | 2026-10-20 |
-| GNOME Shell 50, headless (Fedora 44) | `gnome` | full end-to-end check; other callers and untrusted binaries refused | pass | 2026-10-20 |
+| GNOME Shell 51, headless (Fedora 45) | `gnome` | full end-to-end check; other callers and untrusted binaries refused | pass | 2026-11-10 |
 | Openbox (X11, Arch) | `x11` | full end-to-end check | pass | 2026-10-20 |
 | Xfwm4 (X11, Arch) | `x11` | full end-to-end check | pass | 2026-10-20 |
 | i3 (X11, Arch) | `i3` | end-to-end check, floating windows | pass | 2026-10-20 |
