@@ -40,7 +40,7 @@ Everything runs on your computer. No account, no telemetry; the only network use
 once-a-day check for a new version on GitHub, which you can turn off.
 Cards are small JSON files in a private folder.
 
-**Version 0.2.0.** Install it with your package manager, [from source](#install), or
+**Version 0.2.1.** Install it with your package manager, [from source](#install), or
 from the [latest release](https://github.com/Chaos-Tic/Lyapunov/releases/latest);
 Lyapunov tells you when a newer version is out.
 Package-manager channels are listed in [Packaging](packaging/README.md) as
@@ -149,7 +149,7 @@ compositor or X server, private D-Bus, virtual screen) with
 | Desktop | Windows listed | Moved and resized | Virtual desktops | Maximised / minimised | Checked in |
 | --- | --- | --- | --- | --- | --- |
 | KDE Plasma 6 (KWin, Wayland and X11) | yes | yes | yes | yes | nested KWin 6.8 ([`test-kwin-isolated.sh`](scripts/test-kwin-isolated.sh)); reading windows on a real Plasma 6.8 session |
-| GNOME 50 (with the Shell extension; 45–49 declared) | yes | yes | yes | yes | headless GNOME Shell 50 ([`test-gnome-container.sh`](scripts/test-gnome-container.sh)) |
+| GNOME 51 (with the Shell extension; 45–50 declared) | yes | yes | yes | yes | headless GNOME Shell 51 ([`test-gnome-container.sh`](scripts/test-gnome-container.sh)) |
 | Xfce, Cinnamon, MATE, Openbox, LXDE… (X11, EWMH) | yes | yes | yes | yes | Openbox and Xfwm4 ([`test-sessions-container.sh`](scripts/test-sessions-container.sh)) |
 | sway, i3 | yes | floating windows; tiled ones keep their workspace | workspaces | full screen | sway (headless) and i3 |
 | Hyprland | yes | floating windows; tiled ones keep their workspace | workspaces | — | parsing tests only |

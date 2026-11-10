@@ -13,7 +13,7 @@ case $package in
     dnf install -y --setopt=install_weak_deps=False "$package"
     remove() { dnf remove -y lyapunov; } ;;
 *.pkg.tar.zst)
-    pacman -Sy --noconfirm
+    pacman -Syu --noconfirm
     pacman -U --noconfirm "$package"
     remove() { pacman -R --noconfirm lyapunov; } ;;
 *) echo "Unknown package type: $package" >&2; exit 2 ;;

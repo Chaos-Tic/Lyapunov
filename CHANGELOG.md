@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.1 — 2026-11-10
+
+- Windows: the installer ships the Visual C++ runtime next to Lyapunov, so it
+  starts on a Windows that never had the runtime installed (it stopped there
+  with a missing-library error). The release check refuses an installer that
+  misses a runtime library.
+- GNOME: the Shell extension declares GNOME Shell 51 (Fedora 45), where the
+  Shell would not load it.
+
 ## 0.2.0 — 2026-10-20
 
 - The window checks GitHub once a day for a newer release and shows how to
