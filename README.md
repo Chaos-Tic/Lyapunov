@@ -149,7 +149,7 @@ compositor or X server, private D-Bus, virtual screen) with
 | Desktop | Windows listed | Moved and resized | Virtual desktops | Maximised / minimised | Checked in |
 | --- | --- | --- | --- | --- | --- |
 | KDE Plasma 6 (KWin, Wayland and X11) | yes | yes | yes | yes | nested KWin 6.8 ([`test-kwin-isolated.sh`](scripts/test-kwin-isolated.sh)); reading windows on a real Plasma 6.8 session |
-| GNOME 51 (with the Shell extension; 45–50 declared) | yes | yes | yes | yes | headless GNOME Shell 51 ([`test-gnome-container.sh`](scripts/test-gnome-container.sh)) |
+| GNOME 50 (with the Shell extension; 45–49 declared) | yes | yes | yes | yes | headless GNOME Shell 50 ([`test-gnome-container.sh`](scripts/test-gnome-container.sh)) |
 | Xfce, Cinnamon, MATE, Openbox, LXDE… (X11, EWMH) | yes | yes | yes | yes | Openbox and Xfwm4 ([`test-sessions-container.sh`](scripts/test-sessions-container.sh)) |
 | sway, i3 | yes | floating windows; tiled ones keep their workspace | workspaces | full screen | sway (headless) and i3 |
 | Hyprland | yes | floating windows; tiled ones keep their workspace | workspaces | — | parsing tests only |

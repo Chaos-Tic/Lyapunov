@@ -6,8 +6,6 @@
   starts on a Windows that never had the runtime installed (it stopped there
   with a missing-library error). The release check refuses an installer that
   misses a runtime library.
-- GNOME: the Shell extension declares GNOME Shell 51 (Fedora 45), where the
-  Shell would not load it.
 
 ## 0.2.0 — 2026-10-20
 

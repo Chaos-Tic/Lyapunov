@@ -18,6 +18,6 @@ terminal, `lyapunov gnome-extension` does the same. Packages also install it in
 `/usr/share/gnome-shell/extensions`. On Wayland, GNOME discovers a new
 extension at login: log out and back in once.
 
-Checked on GNOME Shell 51 by `scripts/test-gnome-container.sh`. Versions 45
-to 50 are declared in `metadata.json` and use the same API, with fallbacks
+Checked on GNOME Shell 50 by `scripts/test-gnome-container.sh`. Versions 45
+to 49 are declared in `metadata.json` and use the same API, with fallbacks
 for the calls that changed.
